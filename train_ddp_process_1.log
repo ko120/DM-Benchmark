@@ -1,0 +1,6 @@
+[2024-08-12 15:30:58,212][lightning_fabric.utilities.seed][INFO] - [rank: 1] Seed set to 12345
+[2024-08-12 15:30:59,623][lightning_fabric.utilities.distributed][INFO] - Initializing distributed: GLOBAL_RANK: 1, MEMBER: 2/2
+[2024-08-12 15:31:00,418][pytorch_lightning.accelerators.cuda][INFO] - LOCAL_RANK: 1 - CUDA_VISIBLE_DEVICES: [0,1]
+[2024-08-12 15:39:09,588][lightning_fabric.utilities.seed][INFO] - [rank: 1] Seed set to 12345
+[2024-08-12 15:39:11,231][lightning_fabric.utilities.distributed][INFO] - Initializing distributed: GLOBAL_RANK: 1, MEMBER: 2/2
+[2024-08-12 15:39:11,665][pytorch_lightning.accelerators.cuda][INFO] - LOCAL_RANK: 1 - CUDA_VISIBLE_DEVICES: [0,1]

@@ -1,0 +1,15 @@
+--- Logging error ---
+Traceback (most recent call last):
+  File "/local/scratch/a/ko120/miniconda3/envs/dm/lib/python3.12/logging/__init__.py", line 1164, in emit
+    self.flush()
+  File "/local/scratch/a/ko120/miniconda3/envs/dm/lib/python3.12/logging/__init__.py", line 1144, in flush
+    self.stream.flush()
+OSError: [Errno 5] Input/output error
+Call stack:
+  File "/local/scratch/a/ko120/miniconda3/envs/dm/lib/python3.12/threading.py", line 1030, in _bootstrap
+    self._bootstrap_inner()
+  File "/local/scratch/a/ko120/miniconda3/envs/dm/lib/python3.12/threading.py", line 1073, in _bootstrap_inner
+    self.run()
+  File "/local/scratch/a/ko120/miniconda3/envs/dm/lib/python3.12/site-packages/ipykernel/parentpoller.py", line 38, in run
+    get_logger().warning("Parent appears to have exited, shutting down.")
+Message: 'Parent appears to have exited, shutting down.'

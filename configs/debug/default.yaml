@@ -3,33 +3,26 @@
 # default debugging setup, runs 1 full epoch
 # other debugging configs can inherit from this one
 
-# overwrite task name so debugging logs are stored in separate folder
-task_name: "debug"
+defaults:
+  - override /log_dir: debug.yaml
 
-# disable callbacks and loggers during debugging
-callbacks: null
-logger: null
+trainer:
+  max_epochs: 1
+  gpus: 0 # debuggers don't like gpus
+  detect_anomaly: true # raise exception if NaN or +/-inf is detected in any tensor
+  track_grad_norm: 2 # track gradient norm with loggers
 
-extras:
-  ignore_warnings: False
-  enforce_tags: False
+datamodule:
+  num_workers: 0 # debuggers don't like multiprocessing
+  pin_memory: False # disable gpu memory pin
 
 # sets level of all command line loggers to 'DEBUG'
 # https://hydra.cc/docs/tutorials/basic/running_your_app/logging/
 hydra:
-  job_logging:
-    root:
-      level: DEBUG
+  verbose: True
 
-  # use this to also set hydra loggers to 'DEBUG'
-  # verbose: True
+  # use this to set level of only chosen command line loggers to 'DEBUG':
+  # verbose: [src.train, src.utils]
 
-trainer:
-  max_epochs: 1
-  accelerator: cpu # debuggers don't like gpus
-  devices: 1 # debuggers don't like multiprocessing
-  detect_anomaly: true # raise exception if NaN or +/-inf is detected in any tensor
-
-data:
-  num_workers: 0 # debuggers don't like multiprocessing
-  pin_memory: False # disable gpu memory pin
+# config is already printed by hydra when `hydra/verbose: True`
+print_config: False

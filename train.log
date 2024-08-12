@@ -1,0 +1,117 @@
+[2024-08-12 14:47:58,789][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 14:48:37,974][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 14:48:37,975][src.training_pipeline][INFO] - Instantiating datamodule <src.data_module.ClassificationDataModule>
+[2024-08-12 14:50:28,470][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 14:50:28,472][src.training_pipeline][INFO] - Instantiating datamodule <src.data_module.ClassificationDataModule>
+[2024-08-12 14:52:14,792][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 14:54:54,408][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 14:54:54,409][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule>
+[2024-08-12 14:55:54,732][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 14:55:54,734][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 14:57:17,165][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 14:57:17,166][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 14:57:18,822][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 14:57:52,073][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 14:57:52,074][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 14:57:52,919][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:01:45,565][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:01:45,566][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:09:52,616][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:09:52,617][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:09:53,464][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:12:12,582][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:12:12,584][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:12:13,455][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:13:05,610][matplotlib.font_manager][INFO] - Failed to extract font properties from /usr/share/fonts/truetype/noto/NotoColorEmoji.ttf: In FT2Font: Can not load face (unknown file format; error code 0x2)
+[2024-08-12 15:13:05,874][matplotlib.font_manager][WARNING] - Matplotlib is building the font cache; this may take a moment.
+[2024-08-12 15:13:06,082][matplotlib.font_manager][INFO] - generated new fontManager
+[2024-08-12 15:13:06,642][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:13:06,643][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:13:07,507][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:15:26,182][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:15:26,183][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:15:27,208][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:17:01,285][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:17:01,286][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:17:02,300][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:20:06,255][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:20:06,256][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:20:07,267][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:20:37,274][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:20:37,276][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:20:38,291][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:21:49,038][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:21:49,039][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:21:50,043][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:22:53,812][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:22:53,813][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:22:54,723][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:25:08,688][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:25:08,689][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:25:09,727][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:28:47,970][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:28:47,971][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:28:49,027][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:28:49,230][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.ModelCheckpoint>
+[2024-08-12 15:28:49,232][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.EarlyStopping>
+[2024-08-12 15:28:49,233][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.RichModelSummary>
+[2024-08-12 15:28:49,233][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.RichProgressBar>
+[2024-08-12 15:28:49,234][src.training_pipeline][INFO] - Instantiating logger <pytorch_lightning.loggers.wandb.WandbLogger>
+[2024-08-12 15:28:49,242][src.training_pipeline][INFO] - Instantiating trainer <pytorch_lightning.Trainer>
+[2024-08-12 15:30:28,607][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:30:28,608][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:30:29,689][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:30:29,818][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.ModelCheckpoint>
+[2024-08-12 15:30:29,819][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.EarlyStopping>
+[2024-08-12 15:30:29,820][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.RichModelSummary>
+[2024-08-12 15:30:29,820][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.RichProgressBar>
+[2024-08-12 15:30:29,821][src.training_pipeline][INFO] - Instantiating logger <pytorch_lightning.loggers.wandb.WandbLogger>
+[2024-08-12 15:30:29,824][src.training_pipeline][INFO] - Instantiating trainer <pytorch_lightning.Trainer>
+[2024-08-12 15:30:48,257][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:30:48,259][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:30:49,349][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:30:49,491][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.ModelCheckpoint>
+[2024-08-12 15:30:49,494][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.EarlyStopping>
+[2024-08-12 15:30:49,495][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.RichModelSummary>
+[2024-08-12 15:30:49,496][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.RichProgressBar>
+[2024-08-12 15:30:49,497][src.training_pipeline][INFO] - Instantiating logger <pytorch_lightning.loggers.wandb.WandbLogger>
+[2024-08-12 15:30:49,504][src.training_pipeline][INFO] - Instantiating trainer <pytorch_lightning.Trainer>
+[2024-08-12 15:30:49,529][pytorch_lightning.utilities.rank_zero][INFO] - Trainer already configured with model summary callbacks: [<class 'pytorch_lightning.callbacks.rich_model_summary.RichModelSummary'>]. Skipping setting a default `ModelSummary` callback.
+[2024-08-12 15:30:49,539][pytorch_lightning.utilities.rank_zero][INFO] - GPU available: True (cuda), used: True
+[2024-08-12 15:30:49,539][pytorch_lightning.utilities.rank_zero][INFO] - TPU available: False, using: 0 TPU cores
+[2024-08-12 15:30:49,540][pytorch_lightning.utilities.rank_zero][INFO] - HPU available: False, using: 0 HPUs
+[2024-08-12 15:30:49,540][src.training_pipeline][INFO] - Logging hyperparameters!
+[2024-08-12 15:30:55,410][src.training_pipeline][INFO] - Starting training!
+[2024-08-12 15:30:55,519][pytorch_lightning.utilities.rank_zero][INFO] - You are using a CUDA device ('NVIDIA RTX A5000') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+[2024-08-12 15:30:55,520][lightning_fabric.utilities.distributed][INFO] - Initializing distributed: GLOBAL_RANK: 0, MEMBER: 1/2
+[2024-08-12 15:30:59,633][pytorch_lightning.utilities.rank_zero][INFO] - ----------------------------------------------------------------------------------------------------
+distributed_backend=nccl
+All distributed processes registered. Starting with 2 processes
+----------------------------------------------------------------------------------------------------
+
+[2024-08-12 15:31:00,418][pytorch_lightning.accelerators.cuda][INFO] - LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1]
+[2024-08-12 15:39:02,743][lightning_fabric.utilities.seed][INFO] - Seed set to 12345
+[2024-08-12 15:39:02,744][src.training_pipeline][INFO] - Instantiating datamodule <src.datamodules.classification_datamodule.ClassificationDataModule>
+[2024-08-12 15:39:03,788][src.training_pipeline][INFO] - Instantiating model <src.models.lightening_module.ClassificationLitModule>
+[2024-08-12 15:39:03,925][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.ModelCheckpoint>
+[2024-08-12 15:39:03,926][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.EarlyStopping>
+[2024-08-12 15:39:03,927][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.RichModelSummary>
+[2024-08-12 15:39:03,927][src.training_pipeline][INFO] - Instantiating callback <pytorch_lightning.callbacks.RichProgressBar>
+[2024-08-12 15:39:03,928][src.training_pipeline][INFO] - Instantiating logger <pytorch_lightning.loggers.wandb.WandbLogger>
+[2024-08-12 15:39:03,931][src.training_pipeline][INFO] - Instantiating trainer <pytorch_lightning.Trainer>
+[2024-08-12 15:39:03,953][pytorch_lightning.utilities.rank_zero][INFO] - Trainer already configured with model summary callbacks: [<class 'pytorch_lightning.callbacks.rich_model_summary.RichModelSummary'>]. Skipping setting a default `ModelSummary` callback.
+[2024-08-12 15:39:03,962][pytorch_lightning.utilities.rank_zero][INFO] - GPU available: True (cuda), used: True
+[2024-08-12 15:39:03,963][pytorch_lightning.utilities.rank_zero][INFO] - TPU available: False, using: 0 TPU cores
+[2024-08-12 15:39:03,963][pytorch_lightning.utilities.rank_zero][INFO] - HPU available: False, using: 0 HPUs
+[2024-08-12 15:39:03,963][src.training_pipeline][INFO] - Logging hyperparameters!
+[2024-08-12 15:39:06,852][src.training_pipeline][INFO] - Starting training!
+[2024-08-12 15:39:06,918][pytorch_lightning.utilities.rank_zero][INFO] - You are using a CUDA device ('NVIDIA RTX A5000') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+[2024-08-12 15:39:06,920][lightning_fabric.utilities.distributed][INFO] - Initializing distributed: GLOBAL_RANK: 0, MEMBER: 1/2
+[2024-08-12 15:39:11,236][pytorch_lightning.utilities.rank_zero][INFO] - ----------------------------------------------------------------------------------------------------
+distributed_backend=nccl
+All distributed processes registered. Starting with 2 processes
+----------------------------------------------------------------------------------------------------
+
+[2024-08-12 15:39:11,666][pytorch_lightning.accelerators.cuda][INFO] - LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1]
+[2024-08-12 15:39:21,801][pytorch_lightning.utilities.rank_zero][INFO] - 
+Detected KeyboardInterrupt, attempting graceful shutdown ...
