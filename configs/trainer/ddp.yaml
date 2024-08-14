@@ -1,5 +1,0 @@
-defaults:
-  - default.yaml
-
-strategy: ddp
-sync_batchnorm: True
