@@ -1,0 +1,16 @@
+torch<=2.4.0
+torchvision
+torchmetrics>=0.7.0
+pytorch_lightning==2.4
+pyrootutils==1.0.4
+python-dotenv==1.0.1
+
+hydra-core==1.2.0
+hydra-colorlog==1.2.0
+hydra-optuna-sweeper==1.2.0
+
+pandas
+matplotlib
+rich
+wandb
+numpy==1.25.2
