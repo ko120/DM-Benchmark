@@ -29,3 +29,12 @@ To train a model using our mixed loss (`MMD + NLL`), run
 ```
 python train.py -m experiment=classification_mixed
 ```
+
+### debug
+
+All experimental settings can be found under `configs/experiments/classification_*`. The available classification datasets are `adult`
+To train a model using our mixed loss (`MMD + NLL`), run
+
+```
+python train.py -m experiment=classification_mixed debug=default
+```
