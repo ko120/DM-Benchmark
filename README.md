@@ -32,8 +32,7 @@ python train.py -m experiment=classification_mixed
 
 ### debug
 
-All experimental settings can be found under `configs/experiments/classification_*`. The available classification datasets are `adult`
-To train a model using our mixed loss (`MMD + NLL`), run
+Setting accelerator to cpu and number of workers to 0 to enable pdb
 
 ```
 python train.py -m experiment=classification_mixed debug=default
