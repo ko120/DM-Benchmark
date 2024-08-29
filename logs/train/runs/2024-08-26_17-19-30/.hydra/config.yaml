@@ -1,0 +1,123 @@
+task_name: train
+tags:
+- dev
+train: true
+test: true
+ckpt_path: null
+seed: 12345
+datamodule:
+  _target_: src.datamodules.classification_datamodule.ClassificationDataModule
+  dataset_name: adult_fair
+  data_dir: ${paths.data_dir}
+  batch_size: 64
+  test_batch_size: 8
+  train_val_test_split:
+  - 0.7
+  - 0.1
+  - 0.2
+  num_workers: 0
+  pin_memory: false
+model:
+  _target_: src.models.fair_lightening_module.fair_ClassificationLitModule
+  lr: 0.001
+  weight_decay: 0.0005
+  net:
+    _target_: src.models.components.models.LaftrNet
+    input_size: 1
+    hwdith: 256
+    hdepth: 2
+    output_size: 2
+    input_dim: 102
+    z_dim: 16
+    edepth: 2
+    ewidths: 32
+    cdepth: 2
+    cwidths: 32
+    adepth: 2
+    awidths: 32
+    num_groups: 2
+  criterion:
+    _target_: src.metrics.train_metrics.ClassificationMixedLoss
+    loss_scalers:
+      nll: 1
+      mmd: 0.2
+    operands:
+      x: rbf
+      'y': rbf
+    scalers:
+      x: 1.0
+      'y': 1.0
+    bandwidths:
+      x: 10.0
+      'y': 0.01
+  calibrator:
+    _target_: src.calibration.calibration.TemperatureScaling
+  kcal_kwargs:
+    operands:
+      x: rbf
+      'y': rbf
+    scalers:
+      x: 1.0
+      'y': 1.0
+    bandwidths:
+      x: 10.0
+      'y': 0.01
+callbacks:
+  model_checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    monitor: val/loss
+    mode: min
+    save_top_k: 1
+    save_last: true
+    verbose: false
+    dirpath: checkpoints/
+    filename: epoch_{epoch:03d}
+    auto_insert_metric_name: false
+  early_stopping:
+    _target_: pytorch_lightning.callbacks.EarlyStopping
+    monitor: val/loss
+    mode: min
+    patience: 30
+    min_delta: 0
+  model_summary:
+    _target_: pytorch_lightning.callbacks.RichModelSummary
+    max_depth: -1
+  rich_progress_bar:
+    _target_: pytorch_lightning.callbacks.RichProgressBar
+logger:
+  wandb:
+    _target_: pytorch_lightning.loggers.wandb.WandbLogger
+    project: DM_project
+    name: ${name}
+    save_dir: .
+    offline: false
+    id: null
+    log_model: false
+    prefix: ''
+    job_type: train
+    group: ''
+    tags:
+    - classification
+    - ${name}
+    - hparam
+    - ${datamodule.dataset_name}
+trainer:
+  _target_: pytorch_lightning.Trainer
+  accelerator: cpu
+  devices: 1
+  min_epochs: 10
+  max_epochs: 1
+  gradient_clip_val: 0.5
+paths:
+  root_dir: ${oc.env:PROJECT_ROOT}
+  data_dir: ${paths.root_dir}/data/
+  log_dir: ${paths.root_dir}/logs/
+  output_dir: ${hydra:runtime.output_dir}
+  work_dir: ${hydra:runtime.cwd}
+extras:
+  ignore_warnings: false
+  enforce_tags: true
+  print_config: true
+name: classification_fair
+hparams_search: classification_mixed_optuna.yaml
+print_config: false

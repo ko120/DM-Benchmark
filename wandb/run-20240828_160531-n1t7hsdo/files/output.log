@@ -1,0 +1,136 @@
+[[36m2024-08-28 16:05:33,686[39m][[34msrc.training_pipeline[39m][[32mINFO[39m] - Starting training!
+[[36m2024-08-28 16:05:33,715[39m][[34mpytorch_lightning.utilities.rank_zero[39m][[32mINFO[39m] - You are using a CUDA device ('NVIDIA RTX A5000') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+[[36m2024-08-28 16:05:33,716[39m][[34mpytorch_lightning.accelerators.cuda[39m][[32mINFO[39m] - LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1]
+┏━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃[1m    [22m┃[1m Name                        [22m┃[1m Type                                 [22m┃[1m Params [22m┃[1m Mode  [22m┃
+┡━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ 0  │ net                         │ LaftrNet                             │  8.2 K │ train │
+│ 1  │ net.encoder                 │ MLP                                  │  4.9 K │ train │
+│ 2  │ net.encoder.hiddens         │ ModuleList                           │  4.9 K │ train │
+│ 3  │ net.encoder.hiddens.0       │ Linear                               │  3.3 K │ train │
+│ 4  │ net.encoder.hiddens.1       │ Linear                               │  1.1 K │ train │
+│ 5  │ net.encoder.hiddens.2       │ Linear                               │    528 │ train │
+│ 6  │ net.classifier              │ MLP                                  │  1.7 K │ train │
+│ 7  │ net.classifier.hiddens      │ ModuleList                           │  1.7 K │ train │
+│ 8  │ net.classifier.hiddens.0    │ Linear                               │    544 │ train │
+│ 9  │ net.classifier.hiddens.1    │ Linear                               │  1.1 K │ train │
+│ 10 │ net.classifier.hiddens.2    │ Linear                               │     66 │ train │
+│ 11 │ net.discriminator           │ MLP                                  │  1.6 K │ train │
+│ 12 │ net.discriminator.hiddens   │ ModuleList                           │  1.6 K │ train │
+│ 13 │ net.discriminator.hiddens.0 │ Linear                               │    544 │ train │
+│ 14 │ net.discriminator.hiddens.1 │ Linear                               │  1.1 K │ train │
+│ 15 │ net.discriminator.hiddens.2 │ Linear                               │     33 │ train │
+│ 16 │ criterion                   │ CrossEntropyLoss                     │      0 │ train │
+│ 17 │ CE                          │ CrossEntropyLoss                     │      0 │ train │
+│ 18 │ l1_loss                     │ MeanAbsoluteError                    │      0 │ train │
+│ 19 │ train_acc                   │ BinaryAccuracy                       │      0 │ train │
+│ 20 │ val_acc                     │ BinaryAccuracy                       │      0 │ train │
+│ 21 │ test_acc                    │ BinaryAccuracy                       │      0 │ train │
+│ 22 │ train_ece                   │ MulticlassCalibrationError           │      0 │ train │
+│ 23 │ val_ece                     │ MulticlassCalibrationError           │      0 │ train │
+│ 24 │ test_ece                    │ MulticlassCalibrationError           │      0 │ train │
+│ 25 │ train_entropy               │ ShannonEntropyError                  │      0 │ train │
+│ 26 │ val_entropy                 │ ShannonEntropyError                  │      0 │ train │
+│ 27 │ test_entropy                │ ShannonEntropyError                  │      0 │ train │
+│ 28 │ test_kcal                   │ ClassificationKernelCalibrationError │      0 │ train │
+│ 29 │ val_acc_best                │ MaxMetric                            │      0 │ train │
+│ 30 │ val_ece_best                │ MinMetric                            │      0 │ train │
+│ 31 │ val_entropy_best            │ MinMetric                            │      0 │ train │
+└────┴─────────────────────────────┴──────────────────────────────────────┴────────┴───────┘
+[1mTrainable params[22m: 8.2 K
+[1mNon-trainable params[22m: 0
+[1mTotal params[22m: 8.2 K
+[1mTotal estimated model params size (MB)[22m: 0
+[1mModules in train mode[22m: 32
+[1mModules in eval mode[22m: 0
+/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:424: The 'val_dataloader' does not have many workers which may
+be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=23` in the `DataLoader` to improve performance.
+/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:424: The 'train_dataloader' does not have many workers which
+may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=23` in the `DataLoader` to improve performance.
+[37mEpoch 0/19[39m [38m━━╸━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[39m [37m21/329[39m [38m0:00:01 • 0:00:17[39m [38m19.07it/s[39m [37mv_num: hsdo
+
+
+
+
+
+
+
+
+[37mEpoch 0/19[39m [38m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[39m [37m329/329[39m [38m0:00:17 • 0:00:00[39m [38m18.56it/s [39m [37mv_num: hsdo
+                                                                                       [37mval/acc_best: 0.827 val/ece_best: 0.017 train/loss: 3.929 train/ce_loss: 3.934 train/aud_loss: -0.005     
+
+                                                                                         [37mtrain/acc: 0.818 train/ece: 0.011                                                                       
+
+Epoch 2/19 [38m━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[39m [37m61/329[39m [38m0:00:03 • 0:00:15[39m [38m18.68it/s[39m [37mv_num: hsdo val/loss: 3.449 val/ce_loss: 3.454 val/aud_loss: -0.005 val/acc: 0.835 val/ece: 0.022         
+                                                                                       [37mval/acc_best: 0.835 val/ece_best: 0.017 train/loss: 3.327 train/ce_loss: 3.332 train/aud_loss: -0.005     
+
+
+                                                                                        [37mtrain/acc: 0.847 train/ece: 0.006                                                                        
+
+Epoch 3/19 [38m━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[39m [37m20/329[39m [38m0:00:01 • 0:00:16[39m [38m19.50it/s[39m [37mv_num: hsdo val/loss: 3.398 val/ce_loss: 3.403 val/aud_loss: -0.005 val/acc: 0.838 val/ece: 0.020         
+                                                                                       [37mval/acc_best: 0.838 val/ece_best: 0.017 train/loss: 3.186 train/ce_loss: 3.191 train/aud_loss: -0.005     
+
+                                                                                         [37mtrain/acc: 0.853 train/ece: 0.007                                                                       
+
+
+                                                                                         [37mtrain/acc: 0.856 train/ece: 0.008                                                                       
+
+
+
+Epoch 5/19 [38m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸[39m [37m326/329[39m [38m0:00:17 • 0:00:01[39m [38m19.03it/s[39m [37mv_num: hsdo val/loss: 3.377 val/ce_loss: 3.382 val/aud_loss: -0.005 val/acc: 0.838 val/ece: 0.023        
+                                                                                        [37mval/acc_best: 0.839 val/ece_best: 0.017 train/loss: 3.062 train/ce_loss: 3.067 train/aud_loss: -0.005    
+                                                                                         [37mtrain/acc: 0.858 train/ece: 0.006                                                                       
+
+
+
+                                                                                         [37mtrain/acc: 0.859 train/ece: 0.007                                                                       
+
+
+
+
+                                                                                        [37mtrain/acc: 0.861 train/ece: 0.006                                                                        
+
+
+Epoch 8/19 [38m━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[39m [37m36/329[39m [38m0:00:01 • 0:00:16[39m [38m19.12it/s[39m [37mv_num: hsdo val/loss: 3.448 val/ce_loss: 3.453 val/aud_loss: -0.005 val/acc: 0.838 val/ece: 0.036         
+                                                                                       [37mval/acc_best: 0.841 val/ece_best: 0.017 train/loss: 2.955 train/ce_loss: 2.960 train/aud_loss: -0.005     
+
+                                                                                         [37mtrain/acc: 0.863 train/ece: 0.005                                                                       
+
+
+
+Epoch 10/19 [38m━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[39m [37m12/329[39m [38m0:00:00 • 0:00:16[39m [38m20.09it/s[39m [37mv_num: hsdo val/loss: 3.444 val/ce_loss: 3.449 val/aud_loss: -0.005 val/acc: 0.838 val/ece: 0.023        
+                                                                                        [37mval/acc_best: 0.841 val/ece_best: 0.017 train/loss: 2.896 train/ce_loss: 2.901 train/aud_loss: -0.005    
+
+
+Epoch 10/19 [38m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━[39m [37m275/329[39m [38m0:00:14 • 0:00:03[39m [38m18.67it/s[39m [37mv_num: hsdo val/loss: 3.444 val/ce_loss: 3.449 val/aud_loss: -0.005 val/acc: 0.838 val/ece: 0.023       
+                                                                                         [37mval/acc_best: 0.841 val/ece_best: 0.017 train/loss: 2.896 train/ce_loss: 2.901 train/aud_loss: -0.005   
+                                                                                          [37mtrain/acc: 0.866 train/ece: 0.005                                                                      
+
+Epoch 11/19 [38m━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[39m [37m50/329[39m [38m0:00:02 • 0:00:15[39m [38m19.24it/s[39m [37mv_num: hsdo val/loss: 3.586 val/ce_loss: 3.591 val/aud_loss: -0.005 val/acc: 0.838 val/ece: 0.050        
+                                                                                        [37mval/acc_best: 0.841 val/ece_best: 0.017 train/loss: 2.853 train/ce_loss: 2.858 train/aud_loss: -0.005    
+
+
+                                                                                        [37mval/acc_best: 0.841 val/ece_best: 0.017 train/loss: 2.842 train/ce_loss: 2.847 train/aud_loss: -0.005    
+
+                                                                                          [37mtrain/acc: 0.869 train/ece: 0.006                                                                      
+
+
+[37mValidation[39m  [38m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━[39m [37m344/377[39m [38m0:00:02 • 0:00:01[39m [38m121.12it/s
+
+
+                                                                                         [37mtrain/acc: 0.871 train/ece: 0.007                                                                       
+                                                                                          [37mval/acc_best: 0.841 val/ece_best: 0.017 train/loss: 2.819 train/ce_loss: 2.824 train/aud_loss: -0.005  
+                                                                                          [37mtrain/acc: 0.871 train/ece: 0.007                                                                      
+
+
+                                                                                          [37mtrain/acc: 0.872 train/ece: 0.008                                                                      
+
+
+
+                                                                                        [37mval/acc_best: 0.841 val/ece_best: 0.017 train/loss: 2.746 train/ce_loss: 2.751 train/aud_loss: -0.005    
+
+                                                                                        [37mtrain/acc: 0.872 train/ece: 0.006                                                                        
+Epoch 16/19 [38m━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[39m [37m76/329[39m [38m0:00:04 • 0:00:14[39m [38m18.33it/s[39m [37mv_num: hsdo val/loss: 3.606 val/ce_loss: 3.611 val/aud_loss: -0.005 val/acc: 0.836 val/ece: 0.044        
+                                                                                        [37mval/acc_best: 0.841 val/ece_best: 0.017 train/loss: 2.746 train/ce_loss: 2.751 train/aud_loss: -0.005    
+                                                                                        [37mtrain/acc: 0.872 train/ece: 0.006                                                                        
+[?25h

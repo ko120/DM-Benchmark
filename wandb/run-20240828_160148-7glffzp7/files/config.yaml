@@ -1,0 +1,84 @@
+wandb_version: 1
+
+_wandb:
+  desc: null
+  value:
+    code_path: code/train.py
+    python_version: 3.10.8
+    cli_version: 0.17.6
+    framework: lightning
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1724875309
+    t:
+      1:
+      - 1
+      - 9
+      - 41
+      - 50
+      - 55
+      - 103
+      2:
+      - 1
+      - 9
+      - 41
+      - 50
+      - 55
+      - 103
+      3:
+      - 7
+      - 13
+      - 15
+      - 23
+      - 66
+      4: 3.10.8
+      5: 0.17.6
+      8:
+      - 5
+      13: linux-x86_64
+    m:
+    - 1: trainer/global_step
+      6:
+      - 3
+model:
+  desc: null
+  value: '{''_target_'': ''src.models.fair_lightening_module.fair_ClassificationLitModule'',
+    ''net'': {''_target_'': ''src.models.components.models.LaftrNet'', ''input_size'':
+    102, ''output_size'': 2, ''zdim'': 16, ''edepth'': 2, ''ewidths'': 32, ''cdepth'':
+    2, ''cwidths'': 32, ''adepth'': 2, ''awidths'': 32, ''num_groups'': 2}, ''lr'':
+    0.001, ''weight_decay'': 0.0005, ''criterion'': {''_target_'': ''src.metrics.train_metrics.ClassificationMixedLoss'',
+    ''loss_scalers'': {''nll'': 1, ''mmd'': 0.2}, ''operands'': {''x'': ''rbf'', ''y'':
+    ''rbf''}, ''scalers'': {''x'': 1.0, ''y'': 1.0}, ''bandwidths'': {''x'': 10.0,
+    ''y'': 0.01}}, ''kcal_kwargs'': {''operands'': {''x'': ''rbf'', ''y'': ''rbf''},
+    ''scalers'': {''x'': 1.0, ''y'': 1.0}, ''bandwidths'': {''x'': 10.0, ''y'': 0.01}}}'
+model/params/total:
+  desc: null
+  value: 8179
+model/params/trainable:
+  desc: null
+  value: 8179
+model/params/non_trainable:
+  desc: null
+  value: 0
+datamodule:
+  desc: null
+  value: '{''_target_'': ''src.datamodules.classification_datamodule.ClassificationDataModule'',
+    ''dataset_name'': ''adult_fair'', ''data_dir'': ''${paths.data_dir}'', ''batch_size'':
+    64, ''test_batch_size'': 8, ''train_val_test_split'': [0.7, 0.1, 0.2], ''num_workers'':
+    0, ''pin_memory'': False}'
+trainer:
+  desc: null
+  value: '{''_target_'': ''pytorch_lightning.Trainer'', ''accelerator'': ''gpu'',
+    ''devices'': 1, ''min_epochs'': 10, ''max_epochs'': 1}'
+seed:
+  desc: null
+  value: 12345
+callbacks:
+  desc: null
+  value: '{''model_checkpoint'': {''_target_'': ''pytorch_lightning.callbacks.ModelCheckpoint'',
+    ''monitor'': ''val/loss'', ''mode'': ''min'', ''save_top_k'': 1, ''save_last'':
+    True, ''verbose'': False, ''dirpath'': ''checkpoints/'', ''filename'': ''epoch_{epoch:03d}'',
+    ''auto_insert_metric_name'': False}, ''early_stopping'': {''_target_'': ''pytorch_lightning.callbacks.EarlyStopping'',
+    ''monitor'': ''val/loss'', ''mode'': ''min'', ''patience'': 30, ''min_delta'':
+    0}, ''model_summary'': {''_target_'': ''pytorch_lightning.callbacks.RichModelSummary'',
+    ''max_depth'': -1}, ''rich_progress_bar'': {''_target_'': ''pytorch_lightning.callbacks.RichProgressBar''}}'

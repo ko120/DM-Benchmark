@@ -9,7 +9,7 @@ from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split, T
 from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
 from functools import partial
-
+import pdb
 class ClassificationDataModule(LightningDataModule):
     """Datamodule for classification datasets.
 
@@ -78,7 +78,13 @@ class ClassificationDataModule(LightningDataModule):
         # load datasets only if they're not loaded already
         if not self.data_train and not self.data_val and not self.data_test:
             loader_fun = classification_load_funs[self.hparams.dataset_name]
-            X, y = loader_fun(self.hparams.data_dir)
+            if self.hparams.dataset_name == "adult_fair":
+                X, y, A, A_prop = loader_fun(self.hparams.data_dir)
+                if A.ndim == 1:
+                    A = A.reshape(-1, 1)
+            else:
+                X, y = loader_fun(self.hparams.data_dir)
+
             if self.hparams.normalize:
                 std = X.std(axis=0)
                 zeros = np.isclose(std, 0.)
@@ -87,9 +93,15 @@ class ClassificationDataModule(LightningDataModule):
             if y.ndim == 1:
                 y = y.reshape(-1, 1)
             # Split based on initialized ratio
-            dataset = TensorDataset(torch.Tensor(X), torch.Tensor(y).long())
-            lengths = [int(len(X) * p) for p in self.hparams.train_val_test_split]
-            lengths[-1] += len(X) - sum(lengths)  # fix any rounding errors
+            if self.hparams.dataset_name == "adult_fair":
+                dataset = TensorDataset(torch.Tensor(X), torch.Tensor(y).long(), torch.Tensor(A).long(),torch.Tensor(A_prop))
+                lengths = [int(len(X) * p) for p in self.hparams.train_val_test_split]
+                lengths[-1] += len(X) - sum(lengths)  # fix any rounding errors
+            else:
+                dataset = TensorDataset(torch.Tensor(X), torch.Tensor(y).long())
+                lengths = [int(len(X) * p) for p in self.hparams.train_val_test_split]
+                lengths[-1] += len(X) - sum(lengths)  # fix any rounding errors
+
             self.data_train, self.data_val, self.data_test = random_split(
                 dataset=dataset,
                 lengths=lengths,
@@ -126,6 +138,55 @@ class ClassificationDataModule(LightningDataModule):
             drop_last=True
         )
 
+def _load_adult_fair(data_dir):
+    """
+    Attribute Information:
+    The dataset contains 16 columns
+    Target filed: Income
+    -- The income is divide into two classes: <=50K and >50K
+    Number of attributes: 14
+    -- These are the demographics and other features to describe a person
+    """
+    data_file = os.path.join(data_dir, 'classification/adult/adult.data')
+    colnames = ["age","workclass","fnlwgt","education","educational-num","marital-status","occupation","relationship","race","gender","capital-gain","capital-loss","hours-per-week","native-country","income"]
+    data = pd.read_csv(data_file, header=None, names=colnames, skipinitialspace=True)
+    data = data.replace("?", np.nan).dropna()
+    category_col =['workclass', 'education','marital-status', 'occupation',
+                  'relationship', 'race','native-country']
+    b, c = np.unique(data['income'], return_inverse=True)
+    d, e = np.unique(data['gender'], return_inverse=True)
+    data['income'] = c # turn into binary [0,1]
+    data['gender'] = e # turn into binary [0,1]
+
+
+    def encode_and_bind(original_dataframe, feature_to_encode):
+      dummies = pd.get_dummies(original_dataframe[[feature_to_encode]])
+      res = pd.concat([original_dataframe, dummies], axis=1)
+      res = res.drop([feature_to_encode], axis=1)
+      return res
+
+    for feature in category_col:
+        data = encode_and_bind(data, feature)
+
+    y = data['income'].to_numpy()
+    A = data['gender'].to_numpy()
+    data = data.drop('income', axis=1)
+    data = data.drop('gender', axis=1)
+    X = data.to_numpy().astype(float)
+
+    # compute proportion of A
+    # A_onehot = torch.nn.functional.one_hot(A,)
+    num_group = len(d)
+    A_prop = []
+    for i in range(num_group):
+        A_prop.append(np.sum(A==i))
+    A_prop = [a_prop/len(A) for a_prop in A_prop]
+    A_prop = np.array(A_prop, dtype=float)
+    # duplicate to make same length with other dataset
+    A_prop = np.tile(A_prop, (len(A),1))
+    
+    return X, y, A, A_prop
+
 def _load_adult(data_dir):
     """
     Attribute Information:
@@ -140,7 +201,7 @@ def _load_adult(data_dir):
     data = pd.read_csv(data_file, header=None, names=colnames, skipinitialspace=True)
     data = data.replace("?", np.nan).dropna()
     category_col =['workclass', 'education','marital-status', 'occupation',
-                  'relationship', 'race', 'gender', 'native-country']
+                  'relationship', 'race', 'gender','native-country']
     b, c = np.unique(data['income'], return_inverse=True)
     data['income'] = c # turn into binary [0,1]
 
@@ -156,15 +217,17 @@ def _load_adult(data_dir):
     y = data['income'].to_numpy()
     data = data.drop('income', axis=1)
     X = data.to_numpy().astype(float)
+
     return X, y
 
-
 classification_load_funs = {
-    "adult": _load_adult}
+    "adult": _load_adult,
+    "adult_fair":_load_adult_fair}
 
 classification_shapes = {
     "wdbc": (30, 2),
     "adult": (104, 2),
+    "adult_fair":(102,2), # feature decreased by 2 since we droped gender_Male and gender_Female
     "heart-disease": (23, 5),
     "online-shoppers": (28, 2),
     "dry-bean": (16, 7)

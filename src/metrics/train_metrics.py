@@ -5,7 +5,7 @@ from typing import Optional, Dict, List
 from scipy.special import erf
 import numpy as np
 import time
-
+import pdb
 # Kernels Utils
 
 def rbf_kernel(u: torch.Tensor, v: torch.Tensor, bandwidth=1):
@@ -42,6 +42,7 @@ class ClassificationKernelLoss:
         MMD loss function for classification tasks.
         Allows for distribution matching by specifying operands and kernel functions.
         `scalers` and `bandwidths` are the parameters of the kernel functions.
+        It requires output dim=2 for binary case
     """
     def __init__(self,
                  operands: Dict[str, str] = {'x': "rbf", 'y': "rbf"},
@@ -63,39 +64,40 @@ class ClassificationKernelLoss:
     def __call__(self, x, y, logits, verbose=False):
         kernel_out = None
         loss_mats = [None for i in range(3)]
-
         for op in self.operands:
             scaler = self.scalers[op]
             bandwidth = self.bandwidths[op]
             if op == 'x':
                 # This is only true for tabular data. For example, multi-channel images will have 4D batches for x.
                 assert x.dim() == 2
+                # Computing k(x,x)
                 loss_mat = loss_mat2 = loss_mat3 = scaler * self.kernel_fun[op](x, x, bandwidth)
             elif op == 'y':
                 # Computes MMD loss for classification (See Section 4.1 of paper)
-                num_classes = logits.shape[-1]
+                # Computing Q
+                num_classes = logits.shape[-1] # we consider num_classes=2 for binary
                 y_all = torch.eye(num_classes).to(logits.device)
                 k_yy = self.kernel_fun[op](y_all, y_all, bandwidth)
                 q_y = F.softmax(logits, dim=-1)
                 q_yy = torch.einsum('ic,jd->ijcd', q_y, q_y)
                 total_yy = q_yy * k_yy.unsqueeze(0)
-
+                # Computing PQ
                 k_yj = k_yy[:,y].T
                 total_yj = torch.einsum('ic,jc->ijc', q_y, k_yj)
                 y_one_hot = F.one_hot(y, num_classes=num_classes).float()
-
+                # Computing P
                 loss_mat = scaler * total_yy.sum(dim=(2,3))
                 loss_mat2 = scaler * total_yj.sum(-1)
                 loss_mat3 = scaler * self.kernel_fun[op](y_one_hot, y_one_hot, bandwidth)
             else:
                 assert False, f"When running classification, operands must be x and y. Got operand {op} instead."
-
+            # Computing Expectations
             for i, value in enumerate([loss_mat, loss_mat2, loss_mat3]):
                 if loss_mats[i] is None:
                     loss_mats[i] = value
                 else:
                     loss_mats[i] =  loss_mats[i] * value
-
+        # MMD = E_Q[k(x,x)] -2E_P[E_Q[k(x,x)]] + E_P[k(x,x)], we are ignoring diagonal since it is kernel distance by itself
         kernel_out = mean_no_diag(loss_mats[0]) - 2 * mean_no_diag(loss_mats[1]) + mean_no_diag(loss_mats[2])
 
         return kernel_out

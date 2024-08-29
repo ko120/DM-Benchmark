@@ -1,0 +1,80 @@
+[[36m2024-08-21 16:39:09,928[39m][[34msrc.training_pipeline[39m][[32mINFO[39m] - Starting training!
+┏━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃[1m    [22m┃[1m Name                    [22m┃[1m Type                                 [22m┃[1m Params [22m┃[1m Mode  [22m┃
+┡━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ 0  │ net                     │ MLP                                  │ 92.9 K │ train │
+│ 1  │ net.hiddens             │ ModuleList                           │ 92.9 K │ train │
+│ 2  │ net.hiddens.0           │ Linear                               │ 26.9 K │ train │
+│ 3  │ net.hiddens.1           │ Linear                               │ 65.8 K │ train │
+│ 4  │ net.hiddens.2           │ Linear                               │    257 │ train │
+│ 5  │ train_acc               │ BinaryAccuracy                       │      0 │ train │
+│ 6  │ val_acc                 │ BinaryAccuracy                       │      0 │ train │
+│ 7  │ test_acc                │ BinaryAccuracy                       │      0 │ train │
+│ 8  │ train_ece               │ BinaryCalibrationError               │      0 │ train │
+│ 9  │ val_ece                 │ BinaryCalibrationError               │      0 │ train │
+│ 10 │ test_ece                │ BinaryCalibrationError               │      0 │ train │
+│ 11 │ train_entropy           │ ShannonEntropyError                  │      0 │ train │
+│ 12 │ val_entropy             │ ShannonEntropyError                  │      0 │ train │
+│ 13 │ test_entropy            │ ShannonEntropyError                  │      0 │ train │
+│ 14 │ test_kcal               │ ClassificationKernelCalibrationError │      0 │ train │
+│ 15 │ val_acc_best            │ MaxMetric                            │      0 │ train │
+│ 16 │ val_ece_best            │ MinMetric                            │      0 │ train │
+│ 17 │ val_entropy_best        │ MinMetric                            │      0 │ train │
+│ 18 │ test_calibrated_acc     │ BinaryAccuracy                       │      0 │ train │
+│ 19 │ test_calibrated_ece     │ BinaryCalibrationError               │      0 │ train │
+│ 20 │ test_calibrated_entropy │ ShannonEntropyError                  │      0 │ train │
+│ 21 │ test_calibrated_kcal    │ ClassificationKernelCalibrationError │      0 │ train │
+└────┴─────────────────────────┴──────────────────────────────────────┴────────┴───────┘
+[1mTrainable params[22m: 92.9 K
+[1mNon-trainable params[22m: 0
+[1mTotal params[22m: 92.9 K
+[1mTotal estimated model params size (MB)[22m: 0
+[1mModules in train mode[22m: 22
+[1mModules in eval mode[22m: 0
+/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:424: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the
+`num_workers` argument` to `num_workers=23` in the `DataLoader` to improve performance.
+[?25h
+Error executing job with overrides: ['experiment=classification_mixed', 'debug=default']
+Traceback (most recent call last):
+  File "/local/scratch/a/ko120/DM-Benchmark/train.py", line 44, in main
+    return train(config)
+  File "/local/scratch/a/ko120/DM-Benchmark/src/training_pipeline.py", line 90, in train
+    trainer.fit(model=model, datamodule=datamodule)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 538, in fit
+    call._call_and_handle_interrupt(
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/call.py", line 47, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 574, in _fit_impl
+    self._run(model, ckpt_path=ckpt_path)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 981, in _run
+    results = self._run_stage()
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 1023, in _run_stage
+    self._run_sanity_check()
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 1052, in _run_sanity_check
+    val_loop.run()
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/loops/utilities.py", line 178, in _decorator
+    return loop_run(self, *args, **kwargs)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 135, in run
+    self._evaluation_step(batch, batch_idx, dataloader_idx, dataloader_iter)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 396, in _evaluation_step
+    output = call._call_strategy_hook(trainer, hook_name, *step_args)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/call.py", line 319, in _call_strategy_hook
+    output = fn(*args, **kwargs)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/strategies/strategy.py", line 411, in validation_step
+    return self.lightning_module.validation_step(*args, **kwargs)
+  File "/local/scratch/a/ko120/DM-Benchmark/src/models/lightening_module.py", line 145, in validation_step
+    loss, preds, logits, targets  = self.step(batch)
+  File "/local/scratch/a/ko120/DM-Benchmark/src/models/lightening_module.py", line 100, in step
+    loss = self.criterion(x, y ,logits)
+  File "/local/scratch/a/ko120/DM-Benchmark/src/metrics/train_metrics.py", line 128, in __call__
+    return self.loss_scalers["nll"] * self.nll(logits, y) + self.loss_scalers["mmd"] * self.mmd(x, y, logits)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/torch/nn/modules/loss.py", line 1188, in forward
+    return F.cross_entropy(input, target, weight=self.weight,
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/torch/nn/functional.py", line 3104, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(input, target, weight, _Reduction.get_enum(reduction), ignore_index, label_smoothing)
+IndexError: Target 1 is out of bounds.
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.

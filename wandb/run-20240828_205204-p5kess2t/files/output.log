@@ -1,0 +1,46 @@
+[[36m2024-08-28 20:52:06,897[39m][[34msrc.training_pipeline[39m][[32mINFO[39m] - Starting training!
+[[36m2024-08-28 20:52:06,929[39m][[34mpytorch_lightning.utilities.rank_zero[39m][[32mINFO[39m] - You are using a CUDA device ('NVIDIA RTX A5000') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+[[36m2024-08-28 20:52:06,931[39m][[34mpytorch_lightning.accelerators.cuda[39m][[32mINFO[39m] - LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1]
+┏━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃[1m    [22m┃[1m Name                    [22m┃[1m Type                                 [22m┃[1m Params [22m┃[1m Mode  [22m┃
+┡━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ 0  │ net                     │ MLP                                  │ 93.2 K │ train │
+│ 1  │ net.hiddens             │ ModuleList                           │ 93.2 K │ train │
+│ 2  │ net.hiddens.0           │ Linear                               │ 26.9 K │ train │
+│ 3  │ net.hiddens.1           │ Linear                               │ 65.8 K │ train │
+│ 4  │ net.hiddens.2           │ Linear                               │    514 │ train │
+│ 5  │ train_acc               │ BinaryAccuracy                       │      0 │ train │
+│ 6  │ val_acc                 │ BinaryAccuracy                       │      0 │ train │
+│ 7  │ test_acc                │ BinaryAccuracy                       │      0 │ train │
+│ 8  │ train_ece               │ MulticlassCalibrationError           │      0 │ train │
+│ 9  │ val_ece                 │ MulticlassCalibrationError           │      0 │ train │
+│ 10 │ test_ece                │ MulticlassCalibrationError           │      0 │ train │
+│ 11 │ train_entropy           │ ShannonEntropyError                  │      0 │ train │
+│ 12 │ val_entropy             │ ShannonEntropyError                  │      0 │ train │
+│ 13 │ test_entropy            │ ShannonEntropyError                  │      0 │ train │
+│ 14 │ test_kcal               │ ClassificationKernelCalibrationError │      0 │ train │
+│ 15 │ val_acc_best            │ MaxMetric                            │      0 │ train │
+│ 16 │ val_ece_best            │ MinMetric                            │      0 │ train │
+│ 17 │ val_entropy_best        │ MinMetric                            │      0 │ train │
+│ 18 │ test_calibrated_acc     │ BinaryAccuracy                       │      0 │ train │
+│ 19 │ test_calibrated_ece     │ MulticlassCalibrationError           │      0 │ train │
+│ 20 │ test_calibrated_entropy │ ShannonEntropyError                  │      0 │ train │
+│ 21 │ test_calibrated_kcal    │ ClassificationKernelCalibrationError │      0 │ train │
+└────┴─────────────────────────┴──────────────────────────────────────┴────────┴───────┘
+[1mTrainable params[22m: 93.2 K
+[1mNon-trainable params[22m: 0
+[1mTotal params[22m: 93.2 K
+[1mTotal estimated model params size (MB)[22m: 0
+[1mModules in train mode[22m: 22
+[1mModules in eval mode[22m: 0
+/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:424: The 'val_dataloader' does not have many
+workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=23` in the `DataLoader` to improve performance.
+/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:424: The 'train_dataloader' does not have many
+workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=23` in the `DataLoader` to improve performance.
+[37mEpoch 0/0 [39m [38m━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━━━━━━[39m [37m95/329[39m [38m0:00:01 • 0:00:03[39m [38m86.19it/s[39m [37mv_num: ss2t
+
+[37mEpoch 0/0 [39m [38m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[39m [37m329/329[39m [38m0:00:03 • 0:00:00[39m [38m86.93it/s [39m [37mv_num: ss2t
+[37mValidation[39m [38m━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━[39m [37m167/377[39m [38m0:00:00 • 0:00:02[39m [38m187.55it/s[39m            [[36m2024-08-28 20:52:12,159[39m][[34mpytorch_lightning.utilities.rank_zero[39m][[32mINFO[39m] -
+[37mEpoch 0/0 [39m [38m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[39m [37m329/329[39m [38m0:00:03 • 0:00:00[39m [38m86.93it/s [39m [37mv_num: ss2t
+[37mValidation[39m [38m━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━[39m [37m167/377[39m [38m0:00:00 • 0:00:02[39m [38m187.55it/s
+[?25h

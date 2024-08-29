@@ -1,0 +1,175 @@
+{
+    "os": "Linux-5.15.0-118-generic-x86_64-with-glibc2.35",
+    "python": "3.10.8",
+    "heartbeatAt": "2024-08-28T19:21:06.831933",
+    "startedAt": "2024-08-28T19:21:05.495961",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "experiment=classification_fair",
+        "debug=default"
+    ],
+    "state": "running",
+    "program": "/local/scratch/a/ko120/DM-Benchmark/train.py",
+    "codePathLocal": "train.py",
+    "codePath": "train.py",
+    "git": {
+        "remote": "https://github.com/ko120/DM-Benchmark.git",
+        "commit": "53270c200234a29aab5714a128b4ecae1a398617"
+    },
+    "email": null,
+    "root": "/local/scratch/a/ko120/DM-Benchmark",
+    "host": "fig.ecn.purdue.edu",
+    "username": "ko120",
+    "executable": "/local/scratch/a/ko120/miniconda3/envs/dm_real/bin/python",
+    "cpu_count": 12,
+    "cpu_count_logical": 24,
+    "cpu_freq": {
+        "current": 3432.5891250000004,
+        "min": 1200.0,
+        "max": 4650.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4700.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 4258.242,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4700.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4700.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4700.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        },
+        {
+            "current": 3500.0,
+            "min": 1200.0,
+            "max": 4600.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 62.44486618041992,
+            "used": 29.531368255615234
+        }
+    },
+    "gpu": "NVIDIA RTX A5000",
+    "gpu_count": 2,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA RTX A5000",
+            "memory_total": 25757220864
+        },
+        {
+            "name": "NVIDIA RTX A5000",
+            "memory_total": 25757220864
+        }
+    ],
+    "memory": {
+        "total": 62.48420715332031
+    }
+}

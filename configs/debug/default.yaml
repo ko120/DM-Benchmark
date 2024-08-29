@@ -8,7 +8,7 @@ defaults:
 
 trainer:
   max_epochs: 1
-  accelerator: 'cpu' # debuggers don't like gpus
+  accelerator: 'gpu' # debuggers don't like gpus
   # detect_anomaly: true # raise exception if NaN or +/-inf is detected in any tensor
 
 datamodule:

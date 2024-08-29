@@ -1,0 +1,81 @@
+[[36m2024-08-28 15:21:08,449[39m][[34msrc.training_pipeline[39m][[32mINFO[39m] - Starting training!
+[[36m2024-08-28 15:21:08,479[39m][[34mpytorch_lightning.utilities.rank_zero[39m][[32mINFO[39m] - You are using a CUDA device ('NVIDIA RTX A5000') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+[[36m2024-08-28 15:21:08,481[39m][[34mpytorch_lightning.accelerators.cuda[39m][[32mINFO[39m] - LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1]
+┏━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃[1m    [22m┃[1m Name                        [22m┃[1m Type                                 [22m┃[1m Params [22m┃[1m Mode  [22m┃
+┡━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ 0  │ net                         │ LaftrNet                             │  8.2 K │ train │
+│ 1  │ net.encoder                 │ MLP                                  │  4.9 K │ train │
+│ 2  │ net.encoder.hiddens         │ ModuleList                           │  4.9 K │ train │
+│ 3  │ net.encoder.hiddens.0       │ Linear                               │  3.3 K │ train │
+│ 4  │ net.encoder.hiddens.1       │ Linear                               │  1.1 K │ train │
+│ 5  │ net.encoder.hiddens.2       │ Linear                               │    528 │ train │
+│ 6  │ net.classifier              │ MLP                                  │  1.7 K │ train │
+│ 7  │ net.classifier.hiddens      │ ModuleList                           │  1.7 K │ train │
+│ 8  │ net.classifier.hiddens.0    │ Linear                               │    544 │ train │
+│ 9  │ net.classifier.hiddens.1    │ Linear                               │  1.1 K │ train │
+│ 10 │ net.classifier.hiddens.2    │ Linear                               │     66 │ train │
+│ 11 │ net.discriminator           │ MLP                                  │  1.7 K │ train │
+│ 12 │ net.discriminator.hiddens   │ ModuleList                           │  1.7 K │ train │
+│ 13 │ net.discriminator.hiddens.0 │ Linear                               │    544 │ train │
+│ 14 │ net.discriminator.hiddens.1 │ Linear                               │  1.1 K │ train │
+│ 15 │ net.discriminator.hiddens.2 │ Linear                               │     66 │ train │
+│ 16 │ criterion                   │ CrossEntropyLoss                     │      0 │ train │
+│ 17 │ CE                          │ CrossEntropyLoss                     │      0 │ train │
+│ 18 │ l1_loss                     │ MeanAbsoluteError                    │      0 │ train │
+│ 19 │ train_acc                   │ BinaryAccuracy                       │      0 │ train │
+│ 20 │ val_acc                     │ BinaryAccuracy                       │      0 │ train │
+│ 21 │ test_acc                    │ BinaryAccuracy                       │      0 │ train │
+│ 22 │ train_ece                   │ MulticlassCalibrationError           │      0 │ train │
+│ 23 │ val_ece                     │ MulticlassCalibrationError           │      0 │ train │
+│ 24 │ test_ece                    │ MulticlassCalibrationError           │      0 │ train │
+│ 25 │ train_entropy               │ ShannonEntropyError                  │      0 │ train │
+│ 26 │ val_entropy                 │ ShannonEntropyError                  │      0 │ train │
+│ 27 │ test_entropy                │ ShannonEntropyError                  │      0 │ train │
+│ 28 │ test_kcal                   │ ClassificationKernelCalibrationError │      0 │ train │
+│ 29 │ val_acc_best                │ MaxMetric                            │      0 │ train │
+│ 30 │ val_ece_best                │ MinMetric                            │      0 │ train │
+│ 31 │ val_entropy_best            │ MinMetric                            │      0 │ train │
+└────┴─────────────────────────────┴──────────────────────────────────────┴────────┴───────┘
+[1mTrainable params[22m: 8.2 K
+[1mNon-trainable params[22m: 0
+[1mTotal params[22m: 8.2 K
+[1mTotal estimated model params size (MB)[22m: 0
+[1mModules in train mode[22m: 32
+[1mModules in eval mode[22m: 0
+/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:424: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider
+increasing the value of the `num_workers` argument` to `num_workers=23` in the `DataLoader` to improve performance.
+[?25h
+/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/callbacks/model_checkpoint.py:654: Checkpoint directory /local/scratch/a/ko120/DM-Benchmark/checkpoints exists and is not empty.
+Error executing job with overrides: ['experiment=classification_fair', 'debug=default']
+Traceback (most recent call last):
+  File "/local/scratch/a/ko120/DM-Benchmark/train.py", line 44, in main
+    return train(config)
+  File "/local/scratch/a/ko120/DM-Benchmark/src/training_pipeline.py", line 90, in train
+    trainer.fit(model=model, datamodule=datamodule)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 538, in fit
+    call._call_and_handle_interrupt(
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/call.py", line 47, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 574, in _fit_impl
+    self._run(model, ckpt_path=ckpt_path)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 981, in _run
+    results = self._run_stage()
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 1023, in _run_stage
+    self._run_sanity_check()
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 1052, in _run_sanity_check
+    val_loop.run()
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/loops/utilities.py", line 178, in _decorator
+    return loop_run(self, *args, **kwargs)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 135, in run
+    self._evaluation_step(batch, batch_idx, dataloader_idx, dataloader_iter)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 396, in _evaluation_step
+    output = call._call_strategy_hook(trainer, hook_name, *step_args)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/trainer/call.py", line 319, in _call_strategy_hook
+    output = fn(*args, **kwargs)
+  File "/local/scratch/a/ko120/miniconda3/envs/dm_real/lib/python3.10/site-packages/pytorch_lightning/strategies/strategy.py", line 411, in validation_step
+    return self.lightning_module.validation_step(*args, **kwargs)
+  File "/local/scratch/a/ko120/DM-Benchmark/src/models/fair_lightening_module.py", line 184, in validation_step
+    Y, logits, A, preds, Z = self.step(batch)
+ValueError: too many values to unpack (expected 5)
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.

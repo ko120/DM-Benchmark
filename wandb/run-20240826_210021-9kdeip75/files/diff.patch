@@ -1,0 +1,342 @@
+diff --git a/configs/debug/default.yaml b/configs/debug/default.yaml
+index 103180f..b8ed628 100644
+--- a/configs/debug/default.yaml
++++ b/configs/debug/default.yaml
+@@ -8,7 +8,7 @@ defaults:
+ 
+ trainer:
+   max_epochs: 1
+-  accelerator: 'cpu' # debuggers don't like gpus
++  accelerator: 'gpu' # debuggers don't like gpus
+   # detect_anomaly: true # raise exception if NaN or +/-inf is detected in any tensor
+ 
+ datamodule:
+diff --git a/configs/experiment/classification_mixed.yaml b/configs/experiment/classification_mixed.yaml
+index c13342e..2da5d4b 100644
+--- a/configs/experiment/classification_mixed.yaml
++++ b/configs/experiment/classification_mixed.yaml
+@@ -27,10 +27,6 @@ trainer:
+ 
+ model:
+   lr: 0.001
+-  net:
+-    lin1_size: 256
+-    lin2_size: 256
+-    lin3_size: 256
+   criterion:
+     _target_: src.metrics.train_metrics.ClassificationMixedLoss
+     loss_scalers:
+diff --git a/configs/model/classification.yaml b/configs/model/classification.yaml
+index 3265244..9f45047 100644
+--- a/configs/model/classification.yaml
++++ b/configs/model/classification.yaml
+@@ -3,13 +3,12 @@ lr: 0.001
+ weight_decay: 0.0005
+ 
+ net:
+-  _target_: src.models.components.models.SimpleDenseNet
++  _target_: src.models.components.models.MLP
+   input_size: 1
+-  lin1_size: 256
+-  lin2_size: 256
+-  lin3_size: 256
++  hwdith: 256
++  hdepth: 2
+   output_size: 1
+-  use_batchnorm: True
++
+ 
+ criterion:
+   _target_: torch.nn.CrossEntropyLoss
+diff --git a/src/__pycache__/training_pipeline.cpython-310.pyc b/src/__pycache__/training_pipeline.cpython-310.pyc
+index 07e3556..4317d72 100644
+Binary files a/src/__pycache__/training_pipeline.cpython-310.pyc and b/src/__pycache__/training_pipeline.cpython-310.pyc differ
+diff --git a/src/calibration/__pycache__/calibration.cpython-310.pyc b/src/calibration/__pycache__/calibration.cpython-310.pyc
+index 1e91872..3821cb7 100644
+Binary files a/src/calibration/__pycache__/calibration.cpython-310.pyc and b/src/calibration/__pycache__/calibration.cpython-310.pyc differ
+diff --git a/src/datamodules/__pycache__/classification_datamodule.cpython-310.pyc b/src/datamodules/__pycache__/classification_datamodule.cpython-310.pyc
+index 0b4cd4f..f6e9907 100644
+Binary files a/src/datamodules/__pycache__/classification_datamodule.cpython-310.pyc and b/src/datamodules/__pycache__/classification_datamodule.cpython-310.pyc differ
+diff --git a/src/datamodules/classification_datamodule.py b/src/datamodules/classification_datamodule.py
+index 91a75b3..50aabbe 100644
+--- a/src/datamodules/classification_datamodule.py
++++ b/src/datamodules/classification_datamodule.py
+@@ -9,7 +9,7 @@ from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split, T
+ from torchvision.datasets import MNIST
+ from torchvision.transforms import transforms
+ from functools import partial
+-
++import pdb
+ class ClassificationDataModule(LightningDataModule):
+     """Datamodule for classification datasets.
+ 
+@@ -78,7 +78,13 @@ class ClassificationDataModule(LightningDataModule):
+         # load datasets only if they're not loaded already
+         if not self.data_train and not self.data_val and not self.data_test:
+             loader_fun = classification_load_funs[self.hparams.dataset_name]
+-            X, y = loader_fun(self.hparams.data_dir)
++            if self.hparams.dataset_name == "adult_fair":
++                X, y, A = loader_fun(self.hparams.data_dir)
++                if A.ndim == 1:
++                    A = A.reshape(-1, 1)
++            else:
++                X, y = loader_fun(self.hparams.data_dir)
++
+             if self.hparams.normalize:
+                 std = X.std(axis=0)
+                 zeros = np.isclose(std, 0.)
+@@ -86,10 +92,17 @@ class ClassificationDataModule(LightningDataModule):
+                 X[:, zeros] = 0.
+             if y.ndim == 1:
+                 y = y.reshape(-1, 1)
++
+             # Split based on initialized ratio
+-            dataset = TensorDataset(torch.Tensor(X), torch.Tensor(y).long())
+-            lengths = [int(len(X) * p) for p in self.hparams.train_val_test_split]
+-            lengths[-1] += len(X) - sum(lengths)  # fix any rounding errors
++            if self.hparams.dataset_name == "adult_fair":
++                dataset = TensorDataset(torch.Tensor(X), torch.Tensor(y).long(), torch.Tensor(A).long())
++                lengths = [int(len(X) * p) for p in self.hparams.train_val_test_split]
++                lengths[-1] += len(X) - sum(lengths)  # fix any rounding errors
++            else:
++                dataset = TensorDataset(torch.Tensor(X), torch.Tensor(y).long())
++                lengths = [int(len(X) * p) for p in self.hparams.train_val_test_split]
++                lengths[-1] += len(X) - sum(lengths)  # fix any rounding errors
++
+             self.data_train, self.data_val, self.data_test = random_split(
+                 dataset=dataset,
+                 lengths=lengths,
+@@ -126,6 +139,43 @@ class ClassificationDataModule(LightningDataModule):
+             drop_last=True
+         )
+ 
++def _load_adult_fair(data_dir):
++    """
++    Attribute Information:
++    The dataset contains 16 columns
++    Target filed: Income
++    -- The income is divide into two classes: <=50K and >50K
++    Number of attributes: 14
++    -- These are the demographics and other features to describe a person
++    """
++    data_file = os.path.join(data_dir, 'classification/adult/adult.data')
++    colnames = ["age","workclass","fnlwgt","education","educational-num","marital-status","occupation","relationship","race","gender","capital-gain","capital-loss","hours-per-week","native-country","income"]
++    data = pd.read_csv(data_file, header=None, names=colnames, skipinitialspace=True)
++    data = data.replace("?", np.nan).dropna()
++    category_col =['workclass', 'education','marital-status', 'occupation',
++                  'relationship', 'race','native-country']
++    b, c = np.unique(data['income'], return_inverse=True)
++    d, e = np.unique(data['gender'], return_inverse=True)
++    data['income'] = c # turn into binary [0,1]
++    data['gender'] = e # turn into binary [0,1]
++
++
++    def encode_and_bind(original_dataframe, feature_to_encode):
++      dummies = pd.get_dummies(original_dataframe[[feature_to_encode]])
++      res = pd.concat([original_dataframe, dummies], axis=1)
++      res = res.drop([feature_to_encode], axis=1)
++      return res
++
++    for feature in category_col:
++        data = encode_and_bind(data, feature)
++
++    y = data['income'].to_numpy()
++    A = data['gender'].to_numpy()
++    data = data.drop('income', axis=1)
++    data = data.drop('gender', axis=1)
++    X = data.to_numpy().astype(float)
++    return X, y, A
++
+ def _load_adult(data_dir):
+     """
+     Attribute Information:
+@@ -140,7 +190,7 @@ def _load_adult(data_dir):
+     data = pd.read_csv(data_file, header=None, names=colnames, skipinitialspace=True)
+     data = data.replace("?", np.nan).dropna()
+     category_col =['workclass', 'education','marital-status', 'occupation',
+-                  'relationship', 'race', 'gender', 'native-country']
++                  'relationship', 'race', 'gender','native-country']
+     b, c = np.unique(data['income'], return_inverse=True)
+     data['income'] = c # turn into binary [0,1]
+ 
+@@ -156,15 +206,17 @@ def _load_adult(data_dir):
+     y = data['income'].to_numpy()
+     data = data.drop('income', axis=1)
+     X = data.to_numpy().astype(float)
+-    return X, y
+ 
++    return X, y
+ 
+ classification_load_funs = {
+-    "adult": _load_adult}
++    "adult": _load_adult,
++    "adult_fair":_load_adult_fair}
+ 
+ classification_shapes = {
+     "wdbc": (30, 2),
+     "adult": (104, 2),
++    "adult_fair":(102,2), # feature decreased by 2 since we droped gender_Male and gender_Female
+     "heart-disease": (23, 5),
+     "online-shoppers": (28, 2),
+     "dry-bean": (16, 7)
+diff --git a/src/metrics/__pycache__/__init__.cpython-310.pyc b/src/metrics/__pycache__/__init__.cpython-310.pyc
+index 63d638d..dc66c13 100644
+Binary files a/src/metrics/__pycache__/__init__.cpython-310.pyc and b/src/metrics/__pycache__/__init__.cpython-310.pyc differ
+diff --git a/src/metrics/__pycache__/evaluation_metrics.cpython-310.pyc b/src/metrics/__pycache__/evaluation_metrics.cpython-310.pyc
+index deba34a..853138d 100644
+Binary files a/src/metrics/__pycache__/evaluation_metrics.cpython-310.pyc and b/src/metrics/__pycache__/evaluation_metrics.cpython-310.pyc differ
+diff --git a/src/metrics/__pycache__/train_metrics.cpython-310.pyc b/src/metrics/__pycache__/train_metrics.cpython-310.pyc
+index 503a205..bca8e51 100644
+Binary files a/src/metrics/__pycache__/train_metrics.cpython-310.pyc and b/src/metrics/__pycache__/train_metrics.cpython-310.pyc differ
+diff --git a/src/metrics/train_metrics.py b/src/metrics/train_metrics.py
+index 1e02670..3070cf0 100644
+--- a/src/metrics/train_metrics.py
++++ b/src/metrics/train_metrics.py
+@@ -42,6 +42,7 @@ class ClassificationKernelLoss:
+         MMD loss function for classification tasks.
+         Allows for distribution matching by specifying operands and kernel functions.
+         `scalers` and `bandwidths` are the parameters of the kernel functions.
++        It requires output dim=2 for binary case
+     """
+     def __init__(self,
+                  operands: Dict[str, str] = {'x': "rbf", 'y': "rbf"},
+diff --git a/src/models/__pycache__/lightening_module.cpython-310.pyc b/src/models/__pycache__/lightening_module.cpython-310.pyc
+index fd253ab..a7c7237 100644
+Binary files a/src/models/__pycache__/lightening_module.cpython-310.pyc and b/src/models/__pycache__/lightening_module.cpython-310.pyc differ
+diff --git a/src/models/components/__pycache__/models.cpython-310.pyc b/src/models/components/__pycache__/models.cpython-310.pyc
+index 95e0492..c0025c9 100644
+Binary files a/src/models/components/__pycache__/models.cpython-310.pyc and b/src/models/components/__pycache__/models.cpython-310.pyc differ
+diff --git a/src/models/components/models.py b/src/models/components/models.py
+index b980312..4c73221 100644
+--- a/src/models/components/models.py
++++ b/src/models/components/models.py
+@@ -1,4 +1,6 @@
+ from torch import nn
++import torch.nn.functional as F
++import torch
+ 
+ 
+ class SimpleDenseNet(nn.Module):
+@@ -43,4 +45,79 @@ class SimpleDenseNet(nn.Module):
+         self.output_size = output_size
+ 
+     def forward(self, x):
+-        return self.model(x)
+\ No newline at end of file
++        return self.model(x)
++
++        
++
++
++class MLP(nn.Module):
++    """
++    MLP layer with declaring number of neurons as list ex. [input_size] + hdepth*[hwdith] +[output_size]
++    """
++    def __init__(self, input_size, hwdith, hdepth, output_size, activ="leakyrelu"):
++        """Initializes MLP unit"""
++        super(MLP, self).__init__()
++        self.input_size = input_size
++        self.output_size = output_size
++        self.layers = [input_size] + hdepth*[hwdith] +[output_size] # output size becomes 1 for binary
++        self.num_layers = len(self.layers) - 1
++        self.hiddens = nn.ModuleList(
++            [
++                nn.Linear(self.layers[i], self.layers[i + 1])
++                for i in range(self.num_layers)
++            ]
++        )
++        for hidden in self.hiddens:
++            torch.nn.init.xavier_uniform_(hidden.weight)
++        self.activ = activ
++
++    def forward(self, inputs):
++        """Computes forward pass through the model"""
++        L = inputs
++        for hidden in self.hiddens:
++            L = hidden(L)
++            if self.activ == "softplus":
++                L = F.softplus(L)
++            elif self.activ == "sigmoid":
++                L = F.sigmoid(L)
++            elif self.activ == "relu":
++                L = F.relu(L)
++            elif self.activ == "leakyrelu":
++                L = F.leaky_relu(L)
++            elif self.activ == "None":
++                pass
++            else:
++                raise Exception("bad activation function")
++        return L
++
++    # def freeze(self):
++    #     """Stops gradient computation through MLP parameters"""
++    #     for para in self.parameters():
++    #         para.requires_grad = False
++
++    # def activate(self):
++    #     """Activates gradient computation through MLP parameters"""
++    #     for para in self.parameters():
++    #         para.requires_grad = True
++
++
++class LaftrNet(nn.Module):
++    def __init__(self, input_size ,output_size ,zdim , edepth, ewidths, cdepth, cwidths, adepth, awidths, num_groups):
++        super(LaftrNet,self).__init__()
++        self.enc_neurons = [input_size] + edepth * [ewidths] + [zdim]
++        self.class_neurons = (
++            [zdim] + cdepth * [cwidths] + [output_size]
++        )
++        self.adv_neurons = (
++                [zdim] + adepth * [awidths] + [num_groups])
++        # declare models
++        self.encoder = MLP(input_size = input_size, hdepth = edepth,hwdith = ewidths, output_size = zdim)
++        self.classifier = MLP(input_size = zdim, hdepth = cdepth, hwdith = cwidths, output_size = output_size)
++        self.discriminator = MLP(input_size = zdim, hdepth = adepth, hwdith = awidths, output_size = num_groups )
++        self.output_size = output_size
++
++
++    def forward(self,x):
++        return self.encoder(x)
++
++        
+diff --git a/src/models/lightening_module.py b/src/models/lightening_module.py
+index 5ee7679..0fa1db2 100644
+--- a/src/models/lightening_module.py
++++ b/src/models/lightening_module.py
+@@ -56,7 +56,7 @@ class ClassificationLitModule(LightningModule):
+         self.train_acc = Accuracy(task= task)
+         self.val_acc = Accuracy(task= task)
+         self.test_acc = Accuracy(task= task)
+-    
++
+         # Initialize metrics
+         assert net.output_size >= 2, f"Must have >=2 classes for classification task. Model only has {net.output_size} classes."
+         ece_kwargs = {"task": 'multiclass', "n_bins": 20, "norm": 'l1', "num_classes": net.output_size} # We are always using Multiclass ECE since we are considering binary case as multiclass by 0 as class1 and 1 as class 2
+diff --git a/src/utils/__pycache__/__init__.cpython-310.pyc b/src/utils/__pycache__/__init__.cpython-310.pyc
+index fbfeb67..50cd3e8 100644
+Binary files a/src/utils/__pycache__/__init__.cpython-310.pyc and b/src/utils/__pycache__/__init__.cpython-310.pyc differ
+diff --git a/train.py b/train.py
+index 4087054..66342fc 100644
+--- a/train.py
++++ b/train.py
+@@ -30,13 +30,13 @@ def main(config: DictConfig):
+    
+     
+     # Modifying the configuration
+-    config.datamodule._target_ = 'src.datamodules.classification_datamodule.ClassificationDataModule'
+-    config.datamodule.dataset_name = 'adult'
+-    config.datamodule.data_dir = 'data'
+-    config.model._target_ = 'src.models.lightening_module.ClassificationLitModule'
+-    config.model.net._target_ = 'src.models.components.models.SimpleDenseNet'
+-    config.model.criterion._target_ = 'src.metrics.train_metrics.ClassificationMixedLoss'
+-    config.model.calibrator._target_ = 'src.calibration.calibration.TemperatureScaling'
++    # config.datamodule._target_ = 'src.datamodules.classification_datamodule.ClassificationDataModule'
++    # config.datamodule.dataset_name = 'adult'
++    # config.datamodule.data_dir = 'data'
++    # config.model._target_ = 'src.models.lightening_module.ClassificationLitModule'
++    # config.model.net._target_ = 'src.models.components.models.MLP'
++    # config.model.criterion._target_ = 'src.metrics.train_metrics.ClassificationMixedLoss'
++    # config.model.calibrator._target_ = 'src.calibration.calibration.TemperatureScaling'
+     # config.logger.wandb.project = 'DM_Benchmark'
+     # config.trainer.accelerator = 'gpu'
+     # config.trainer.devices = '1'

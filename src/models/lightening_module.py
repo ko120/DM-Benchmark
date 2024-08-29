@@ -9,6 +9,7 @@ from torchmetrics.classification.calibration_error import CalibrationError
 import pdb
 from typing import Any, List, Literal, Optional, Dict, Callable
 from src.metrics import ShannonEntropyError, ClassificationKernelCalibrationError
+
 # Core NN Module
 class ClassificationLitModule(LightningModule):
     """ LightningModule for Classification tasks.
@@ -56,7 +57,7 @@ class ClassificationLitModule(LightningModule):
         self.train_acc = Accuracy(task= task)
         self.val_acc = Accuracy(task= task)
         self.test_acc = Accuracy(task= task)
-    
+
         # Initialize metrics
         assert net.output_size >= 2, f"Must have >=2 classes for classification task. Model only has {net.output_size} classes."
         ece_kwargs = {"task": 'multiclass', "n_bins": 20, "norm": 'l1', "num_classes": net.output_size} # We are always using Multiclass ECE since we are considering binary case as multiclass by 0 as class1 and 1 as class 2
@@ -191,8 +192,8 @@ class ClassificationLitModule(LightningModule):
             logits = self.forward(val_x)
             val_pred = F.softmax(logits, dim=-1)
 
-        with torch.enable_grad():
-            self.calibrator.train(val_pred, val_y)
+        torch.set_grad_enabled(True) # need to set it to True since Lightning by default, it doesn't require grad for val/test
+        self.calibrator.train(val_pred, val_y)
 
     def test_step(self, batch: Any, batch_idx: int):
         loss, preds, logits, targets= self.step(batch)
