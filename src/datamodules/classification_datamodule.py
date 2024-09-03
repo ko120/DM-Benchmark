@@ -180,7 +180,8 @@ def _load_adult_fair(data_dir):
     A_prop = []
     for i in range(num_group):
         A_prop.append(np.sum(A==i))
-    A_prop = [a_prop/len(A) for a_prop in A_prop]
+    # multiply by 1.0 to ensure its float
+    A_prop = [(a_prop* 1.0) /len(A) for a_prop in A_prop] 
     A_prop = np.array(A_prop, dtype=float)
     # duplicate to make same length with other dataset
     A_prop = np.tile(A_prop, (len(A),1))

@@ -43,3 +43,4 @@ class ClassificationKernelCalibrationError(Metric):
 
     def compute(self):
         return self.kcal_total.float() / self.count
+

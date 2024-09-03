@@ -110,6 +110,7 @@ class LaftrNet(nn.Module):
         self.classifier = MLP(input_size = zdim, hdepth = cdepth, hwdith = cwidths, output_size = output_size)
         self.discriminator = MLP(input_size = zdim, hdepth = adepth, hwdith = awidths, output_size = num_groups-1)
         self.output_size = output_size
+        self.num_groups = num_groups
 
 
     def forward(self,x):

@@ -32,29 +32,13 @@ trainer:
 
 model:
   criterion:
-    _target_: "src.metrics.train_metrics.ClassificationMixedLoss"
-    loss_scalers:
-        nll: 1
-        mmd: 0.2
-    operands:
-      x: "rbf"
-      y: "rbf"
-    scalers:
-      x: 1.0
-      y: 1.0
-    bandwidths:
-      x: 10.0
-      y: 0.01
-  kcal_kwargs:
-    operands:
-      x: "rbf"
-      y: "rbf"
-    scalers:
-      x: 1.0
-      y: 1.0
-    bandwidths:
-      x: 10.0
-      y: 0.01
+    _target_: "src.metrics.train_metrics.ClassificationCELoss"
+    loss_scalers: 10
+  criterion2:
+    _target_: "src.metrics.train_metrics.ClassificationL1Loss"
+    loss_scalers: 0.01
+   
+
 
 
 logger:

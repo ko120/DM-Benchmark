@@ -7,6 +7,7 @@ import torchmetrics
 from torchmetrics import MaxMetric, MinMetric
 from torchmetrics.classification.accuracy import Accuracy
 from torchmetrics.classification.calibration_error import CalibrationError
+from torchmetrics.classification import BinaryFairness
 import pdb
 from typing import Any, List, Literal, Optional, Dict, Callable
 from src.metrics import ShannonEntropyError, ClassificationKernelCalibrationError
@@ -29,6 +30,7 @@ class fair_ClassificationLitModule(LightningModule):
         self,
         net: torch.nn.Module,
         criterion: Callable,
+        criterion2:Callable = None, 
         calibrator: Callable = None,
         lr: float = 0.001,
         weight_decay: float = 0.0005,
@@ -48,11 +50,10 @@ class fair_ClassificationLitModule(LightningModule):
         self.test_outputs ={"logits": [], "sensitive": [], "preds": [], "targets":[], "x":[]}
         
         # loss function
-        self.criterion = torch.nn.CrossEntropyLoss()
+        self.criterion = criterion
+        self.criterion2= criterion2
         # self.criterion = criterion
         self.calibrator = calibrator
-        self.CE = torch.nn.CrossEntropyLoss()
-        self.l1_loss = torchmetrics.MeanAbsoluteError()
         task = 'binary' if net.output_size == 2 else 'multiclass'
 
         # use separate metric instance for train, val and test step
@@ -68,6 +69,11 @@ class fair_ClassificationLitModule(LightningModule):
         self.val_ece = CalibrationError(**ece_kwargs)
         self.test_ece = CalibrationError(**ece_kwargs)
 
+        # Torchmetric uses min pos_rate/ max pos_rate, so close to 1 is better
+        self.train_dp = BinaryFairness(num_groups= self.net.num_groups)
+        self.val_dp = BinaryFairness(num_groups= self.net.num_groups)
+        self.test_dp = BinaryFairness(num_groups= self.net.num_groups)
+
         self.train_entropy = ShannonEntropyError()
         self.val_entropy = ShannonEntropyError()
         self.test_entropy = ShannonEntropyError()
@@ -80,6 +86,7 @@ class fair_ClassificationLitModule(LightningModule):
         self.val_acc_best = MaxMetric()
         self.val_ece_best = MinMetric()
         self.val_entropy_best = MinMetric()
+        self.val_dp_best = MaxMetric()
 
         # Additional metrics for post-hoc calibration
         if self.calibrator:
@@ -96,30 +103,32 @@ class fair_ClassificationLitModule(LightningModule):
         # so we need to make sure val_acc_best doesn't store accuracy from these checks
         self.val_acc_best.reset()
         self.val_ece_best.reset()
+        self.val_entropy_best.reset()
+        self.val_dp_best.reset()
 
     def step(self, batch: Any):
-        # detect Nan Inf for grad (This is needed since we are taking gradient of L1 Norm)    
-        torch.autograd.set_detect_anomaly(True)
-
         X, Y, A, A_prop = batch
-        Y = Y.squeeze()
+        Y = Y.squeeze(-1)
+        A = A.squeeze(-1)
         # forward pass for classifier
         Z = self.net.encoder(X)
         logit =  self.net.classifier(Z)
         preds = torch.argmax(logit,dim=-1)
 
         return Y, logit, A, preds, Z, A_prop
-
     def training_step(self, batch: Any, batch_idx: int):
+        # detect Nan Inf for grad (This is needed since we are taking gradient of L1 Norm)    
+        torch.autograd.set_detect_anomaly(True)
+
         Y, logits, A, preds, Z, A_prop = self.step(batch)
         optimizer, optimizer_d = self.optimizers()
         # taking only gradient on encoder + classifier network    
         self.toggle_optimizer(optimizer) 
 
         # Loss computation
-        ce_loss = 10*self.CE(logits, Y)
+        ce_loss = self.criterion(logits, Y)
         self.manual_backward(ce_loss,retain_graph=True)
-        torch.nn.utils.clip_grad_norm_(self.net.predict_params(), 5.0)
+        self.clip_gradients(optimizer, gradient_clip_val=0.5, gradient_clip_algorithm="norm")
         optimizer.step()
         optimizer.zero_grad()
         # stop tracking gradient for encoder + classifier network 
@@ -133,12 +142,13 @@ class fair_ClassificationLitModule(LightningModule):
         # detaching is needed to prevent gradient flow back to classifier
         A_hat = self.net.discriminator(Z.detach()) 
         A_hat_prob = torch.sigmoid(A_hat)
-        aud_loss = -0.01*self.l1_loss(A_hat_prob,A)
-        # multiplying by proportion of group from dataset to compute emperical expectation of DP
+        A_hat_prob = A_hat_prob.squeeze(-1)
+        aud_loss = -self.criterion2(A_hat_prob,A)
+        # multiplying by proportion of group from dataset to compute DP loss = E_z0[h] + E_z1[1-h]
         weights = A_prop[0][0]*(1-A) + A_prop[1][1]*(A)
         aud_loss = torch.mean(weights* aud_loss)
         self.manual_backward(aud_loss)
-        torch.nn.utils.clip_grad_norm_(self.net.audit_params(), 5.0)
+        self.clip_gradients(optimizer_d, gradient_clip_val=0.5, gradient_clip_algorithm="norm")
         optimizer_d.step()
         optimizer_d.zero_grad()
         # stop tracking gradient for discriminator network 
@@ -158,6 +168,59 @@ class fair_ClassificationLitModule(LightningModule):
         # remember to always return loss from `training_step()` or else backpropagation will fail!
         return total_loss
 
+    # # paper implementation: https://github.com/charan223/FairDeepLearning/blob/main/models/model_laftr.py
+    # def training_step(self, batch: Any, batch_idx: int):
+    #     # detect Nan Inf for grad (This is needed since we are taking gradient of L1 Norm)    
+    #     torch.autograd.set_detect_anomaly(True)
+
+    #     Y, logits, A, preds, Z, A_prop = self.step(batch)
+    #     optimizer, optimizer_d = self.optimizers()
+    #     # taking only gradient on encoder + classifier network    
+        
+
+    #     # Loss computation
+    #     ce_loss = self.criterion(logits, Y)
+    #     A_hat = self.net.discriminator(Z.detach()) 
+    #     A_hat_prob = torch.sigmoid(A_hat)
+    #     A_hat_prob = A_hat_prob.squeeze(-1)
+    #     aud_loss = -self.criterion2(A_hat_prob,A)
+    #     # multiplying by proportion of group from dataset to compute DP loss = E_z0[h] + E_z1[1-h]
+    #     weights = A_prop[0][0]*(1-A) + A_prop[1][1]*(A)
+    #     aud_loss = torch.mean(weights * aud_loss)
+
+    #     total_loss = aud_loss + ce_loss
+
+    #     self.toggle_optimizer(optimizer) 
+    #     optimizer.zero_grad()
+    #     self.manual_backward(total_loss,retain_graph=True)
+    #     self.clip_gradients(optimizer, gradient_clip_val=0.5, gradient_clip_algorithm="norm")
+    #     optimizer.step()
+        
+    #     # stop tracking gradient for encoder + classifier network 
+    #     self.untoggle_optimizer(optimizer)
+
+    #     # taking only gradient on adversarial network 
+    #     self.toggle_optimizer(optimizer_d) 
+    #     optimizer_d.zero_grad()
+    #     self.manual_backward(aud_loss)
+    #     self.clip_gradients(optimizer_d, gradient_clip_val=0.5, gradient_clip_algorithm="norm")
+    #     optimizer_d.step()
+        
+    #     # stop tracking gradient for discriminator network 
+    #     self.untoggle_optimizer(optimizer_d)
+        
+    #     self.log("train/loss", total_loss, on_step=False, on_epoch=True, prog_bar=True)
+    #     self.log("train/ce_loss", ce_loss, on_step=False, on_epoch=True, prog_bar=True)
+    #     self.log("train/aud_loss", aud_loss, on_step=False, on_epoch=True, prog_bar=True)
+        
+    #     self.train_outputs["sensitive"].append(A)
+    #     self.train_outputs["targets"].append(Y)
+    #     self.train_outputs["preds"].append(preds)
+    #     self.train_outputs["logits"].append(logits)
+
+    #     # remember to always return loss from `training_step()` or else backpropagation will fail!
+    #     return total_loss
+
     def on_train_epoch_end(self):
         # We need to compute and log metrics in this phase. If we compute metrics during training step, every epoch which is computationally ineficient
         epoch_sensitive = torch.cat(self.train_outputs["sensitive"], dim=0)
@@ -168,26 +231,29 @@ class fair_ClassificationLitModule(LightningModule):
         # log train metrics
         acc = self.train_acc(epoch_preds, epoch_targets)
         ece = self.train_ece(epoch_logits, epoch_targets)
+        dp_dict = self.train_dp(preds= epoch_preds, target = epoch_targets, groups = epoch_sensitive)
+        dp = next(iter(dp_dict.values())).cpu().item()
 
         self.log("train/acc", acc, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/ece", ece, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/dp", dp, on_step=False, on_epoch=True, prog_bar=True)
 
         # need to clear at the end
         self.train_outputs["logits"].clear()
         self.train_outputs["targets"].clear()
         self.train_outputs["preds"].clear()
         self.train_outputs["sensitive"].clear()
-        
 
     def validation_step(self, batch: Any, batch_idx: int):
         Y, logits, A, preds, Z, A_prop = self.step(batch)
-        
-        # computing loss
-        ce_loss = 10*self.CE(logits,Y)
+       
+        # computing loss    
+        ce_loss = self.criterion(logits,Y)
         # forward pass for adversarial
         A_hat = self.net.discriminator(Z.detach())
         A_hat_prob = torch.sigmoid(A_hat)
-        aud_loss = -0.01*self.l1_loss(A_hat_prob,A)
+        A_hat_prob = A_hat_prob.squeeze(-1)
+        aud_loss = -self.criterion2(A_hat_prob,A)
         weights = A_prop[0][0]*(1-A) + A_prop[1][1]*(A)
         aud_loss = torch.mean(weights* aud_loss)
         total_loss = ce_loss + aud_loss
@@ -213,18 +279,23 @@ class fair_ClassificationLitModule(LightningModule):
         # log val metrics
         acc = self.val_acc(epoch_preds, epoch_targets)
         ece = self.val_ece(epoch_logits, epoch_targets)
+        dp_dict = self.val_dp(preds= epoch_preds, target = epoch_targets, groups = epoch_sensitive)
+        dp = next(iter(dp_dict.values()))
 
         self.log("val/acc", acc, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/ece", ece, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/dp", dp, on_step=False, on_epoch=True, prog_bar=True)
 
         # log best metric
         self.val_acc_best(acc)
         self.val_ece_best(ece)
+        self.val_dp_best(dp)
 
         # log `*_best` metrics as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
         self.log("val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True)
         self.log("val/ece_best", self.val_ece_best.compute(), sync_dist=True, prog_bar=True)
+        self.log("val/dp_best", self.val_dp_best.compute(), sync_dist=True, prog_bar=True)
 
         # need to clear at the end
         self.val_outputs["logits"].clear()
@@ -250,11 +321,12 @@ class fair_ClassificationLitModule(LightningModule):
         Y, logits, A, preds, Z, A_prop = self.step(batch)
 
         # computing loss
-        ce_loss = 10*self.CE(logits,Y)
+        ce_loss = self.criterion(logits,Y)
         # forward pass for adversarial
         A_hat = self.net.discriminator(Z.detach())
         A_hat_prob = torch.sigmoid(A_hat)
-        aud_loss = -0.01*self.l1_loss(A_hat_prob,A)
+        A_hat_prob = A_hat_prob.squeeze(-1)
+        aud_loss = -self.criterion2(A_hat_prob,A)
         weights = A_prop[0][0]*(1-A) + A_prop[1][1]*(A)
         aud_loss = torch.mean(weights* aud_loss)
         total_loss = ce_loss + aud_loss
@@ -265,6 +337,7 @@ class fair_ClassificationLitModule(LightningModule):
         
 
         x,_,_,_ = batch
+        self.test_outputs["sensitive"].append(A)
         self.test_outputs["logits"].append(logits)
         self.test_outputs["targets"].append(Y)
         self.test_outputs["preds"].append(preds)
@@ -273,6 +346,7 @@ class fair_ClassificationLitModule(LightningModule):
         return total_loss
 
     def on_test_epoch_end(self):
+        epoch_sensitive = torch.cat(self.test_outputs["sensitive"], dim=0)
         epoch_logits = torch.cat(self.test_outputs["logits"], dim=0)
         epoch_targets = torch.cat(self.test_outputs["targets"], dim=0)
         epoch_preds = torch.cat(self.test_outputs["preds"], dim=0)
@@ -281,12 +355,14 @@ class fair_ClassificationLitModule(LightningModule):
         # log test metrics
         acc = self.test_acc(epoch_preds, epoch_targets)
         ece = self.test_ece(epoch_logits, epoch_targets)
-
+        dp_dict = self.test_dp(preds= epoch_preds, target = epoch_targets, groups = epoch_sensitive)
+        dp = next(iter(dp_dict.values())).cpu().item()
         kcal = self.test_kcal(epoch_logits, epoch_targets, epoch_x)
 
         self.log("test/acc", acc, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/ece", ece, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/kcal", kcal, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/dp", dp, on_step=False, on_epoch=True, prog_bar=True)
 
         # If post-hoc calibration method is chosen, apply it to model predictions
         if self.calibrator:
@@ -319,6 +395,10 @@ class fair_ClassificationLitModule(LightningModule):
         self.train_acc.reset()
         self.test_acc.reset()
         self.val_acc.reset()
+
+        self.train_dp.reset()
+        self.test_dp.reset()
+        self.val_dp.reset()
 
         self.train_ece.reset()
         self.test_ece.reset()

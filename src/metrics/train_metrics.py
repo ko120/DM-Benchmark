@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import torchmetrics
 import torch.nn.functional as F
 from typing import Optional, Dict, List
 from scipy.special import erf
@@ -106,11 +107,24 @@ class ClassificationCELoss:
     """
         Cross-entropy loss for classification.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, loss_scalers=1, **kwargs):
         self.loss = torch.nn.CrossEntropyLoss(**kwargs)
+        self.loss_scalers = loss_scalers
 
-    def __call__(self, x, y, logits):
-        return self.loss(logits, y)
+    def __call__(self, logits, y):
+        return self.loss(logits, y) * self.loss_scalers
+
+class ClassificationL1Loss:
+    """
+        L1 loss for classification
+    """
+    def __init__(self, loss_scalers=1, **kwargs):
+        self.loss = torchmetrics.MeanAbsoluteError(**kwargs)
+        self.loss_scalers = loss_scalers
+            
+    def __call__(self, logits,y):
+        self.loss.to(logits.device)
+        return self.loss(logits, y) * self.loss_scalers
 
 class ClassificationMixedLoss:
     """
