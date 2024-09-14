@@ -14,3 +14,4 @@ matplotlib
 rich
 wandb
 numpy==1.25.2
+geomloss 

@@ -31,12 +31,12 @@ trainer:
   max_epochs: 20
 
 model:
-  criterion:
+  task_criterion:
     _target_: "src.metrics.train_metrics.ClassificationCELoss"
-    loss_scalers: 10
-  criterion2:
+    loss_scalers: 1
+  reg_criterion:
     _target_: "src.metrics.train_metrics.ClassificationL1Loss"
-    loss_scalers: 0.01
+    loss_scalers: 0.1
    
 
 

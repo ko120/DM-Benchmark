@@ -25,37 +25,47 @@ trainer:
   max_epochs: 30
   gradient_clip_val: 0.5
 
+
+
 model:
   lr: 0.001
-  criterion:
-    _target_: src.metrics.train_metrics.ClassificationMixedLoss
-    loss_scalers:
-        nll: 1
-        mmd: 0.2
-    operands:
-      x: "rbf"
-      y: "rbf"
-    scalers:
-      x: 1.0
-      y: 1.0
-    bandwidths:
-      x: 10.0
-      y: 0.01
-  kcal_kwargs:
-    operands:
-      x: "rbf"
-      y: "rbf"
-    scalers:
-      x: 1.0
-      y: 1.0
-    bandwidths:
-      x: 10.0
-      y: 0.01
+  # reg_criterion:
+  #   _target_: src.metrics.train_metrics.ClassificationKernelLoss
+  #   loss_scalers: 0.2
+  #   operands:
+  #     x: "rbf"
+  #     y: "rbf"
+  #   scalers:
+  #     x: 1.0
+  #     y: 1.0
+  #   bandwidths:
+  #     x: 10.0
+  #     y: 0.01
+  # kcal_kwargs:
+  #   loss_scalers: 1
+  #   operands:
+  #     x: "rbf"
+  #     y: "rbf"
+  #   scalers:
+  #     x: 1.0
+  #     y: 1.0
+  #   bandwidths:
+  #     x: 10.0
+  #     y: 0.01
+  reg_criterion:
+     _target_: src.metrics.train_metrics.ClassificationSinkhornLoss
+     loss_scalers: 0.2
+  task_criterion:
+    _target_: src.metrics.train_metrics.ClassificationCELoss
+    loss_scalers: 1
 
+
+# need to use adult fair dataset to compute DP
 datamodule:
+  dataset_name: "adult_fair"
   batch_size: 64
   test_batch_size: 8
-
+  
 logger:
   wandb:
     tags: ["classification", "${name}", "hparam", "${datamodule.dataset_name}"]

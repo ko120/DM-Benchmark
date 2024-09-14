@@ -10,7 +10,7 @@ net:
   output_size: 1
 
 
-criterion:
+task_criterion:
   _target_: torch.nn.CrossEntropyLoss
 
 calibrator:

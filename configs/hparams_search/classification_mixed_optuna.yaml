@@ -22,7 +22,7 @@ hydra:
     storage: null
 
     # name of the study to persist optimization results
-    study_name: classification_mixed
+    study_name: classification_calib
 
     # number of parallel workers
     n_jobs: 1
@@ -42,15 +42,11 @@ hydra:
 
     # define range of hyperparameters
     params:
-      model.criterion.bandwidths.x: tag(log, interval(1.0, 100))
-      model.criterion.bandwidths.y: tag(log, interval(0.001, 10))
-      model.criterion.scalers.x: tag(log, interval(0.01, 10))
-      model.criterion.scalers.y: tag(log, interval(0.01, 10))
-      model.criterion.loss_scalers.nll: tag(log, interval(0.001, 10))
-      model.criterion.loss_scalers.mmd: tag(log, interval(0.0001, 1))
-      model.criterion.loss_scalers.sink: tag(log, interval(0.00001, 100))
+      model.reg_criterion.bandwidths.x: tag(log, interval(0.001, 200))
+      model.reg_criterion.bandwidths.y: tag(log, interval(0.001, 200))
+      model.reg_criterion.scalers.x: tag(log, interval(0.01, 10))
+      model.reg_criterion.scalers.y: tag(log, interval(0.01, 10))
+      model.reg_criterion.loss_scalers: tag(log, interval(0.1, 1000))
       model.lr: tag(log, interval(0.000001, 0.01))
-      model.net.lin1_size: choice(32, 64, 128, 256, 512)
-      model.net.lin2_size: choice(32, 64, 128, 256, 512)
-      model.net.lin3_size: choice(32, 64, 128, 256, 512)
-      model.net.use_batchnorm: choice(False)
+
+      
