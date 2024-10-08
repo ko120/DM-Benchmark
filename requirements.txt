@@ -15,3 +15,4 @@ rich
 wandb
 numpy==1.25.2
 geomloss 
+scikit-learn

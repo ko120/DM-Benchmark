@@ -7,7 +7,7 @@ from torchmetrics import Metric
 from torchmetrics import MaxMetric, MinMetric
 from torchmetrics.classification.accuracy import Accuracy
 from torchmetrics.classification.calibration_error import CalibrationError
-from src.metrics.train_metrics import ClassificationKernelLoss
+from src.metrics.train_metrics import ClassificationCalibKernelLoss
 from typing import Any, List, Literal, Optional, Dict, Callable
 
 # Evaluating Metrics

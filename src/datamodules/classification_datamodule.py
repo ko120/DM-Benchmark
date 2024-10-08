@@ -9,7 +9,10 @@ from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split, T
 from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
 from functools import partial
+from sklearn.utils import resample
+
 import pdb
+
 class ClassificationDataModule(LightningDataModule):
     """Datamodule for classification datasets.
 
@@ -175,18 +178,16 @@ def _load_adult_fair(data_dir):
     X = data.to_numpy().astype(float)
 
     # compute proportion of A
-    # A_onehot = torch.nn.functional.one_hot(A,)
-    num_group = len(d)
-    A_prop = []
-    for i in range(num_group):
-        A_prop.append(np.sum(A==i))
-    # multiply by 1.0 to ensure its float
-    A_prop = [(a_prop* 1.0) /len(A) for a_prop in A_prop] 
-    A_prop = np.array(A_prop, dtype=float)
-    # duplicate to make same length with other dataset
-    A_prop = np.tile(A_prop, (len(A),1))
+    A_tensor = torch.tensor(A)
+    bin_count = torch.bincount(A_tensor)
+    A_prop = bin_count.float() / A_tensor.size(0)
+    A_prop = A_prop.repeat((A_tensor.size(0),1))
+    
     
     return X, y, A, A_prop
+
+
+
 
 def _load_adult(data_dir):
     """

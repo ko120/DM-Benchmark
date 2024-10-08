@@ -30,8 +30,8 @@ class ClassificationLitModule(LightningModule):
         self,
         net: torch.nn.Module,
         task_criterion: Callable,
-        reg_criterion:Callable = None, 
-        calibrator: Callable = None,
+        reg_criterion: Callable, 
+        calibrator: Optional[Callable] = None,
         lr: float = 0.001,
         weight_decay: float = 0.0005
     ):
@@ -41,6 +41,11 @@ class ClassificationLitModule(LightningModule):
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False, ignore=['net'])  # this is needed for efficiency
         self.net = net
+        
+        self.is_adv = self.net.adv
+        # disable automatic optimization for simulatneous gradient descent for adversarial loss
+        if self.is_adv:
+            self.automatic_optimization = False
 
         # store outputs
         self.train_outputs ={"logits": [],"sensitive": [], "preds": [], "targets":[]}
@@ -48,7 +53,6 @@ class ClassificationLitModule(LightningModule):
         self.test_outputs ={"logits": [], "sensitive": [], "preds": [], "targets":[]}
         
         # loss function
-        # self.criterion = torch.nn.CrossEntropyLoss()
         self.task_criterion = task_criterion
         self.reg_criterion = reg_criterion
         self.calibrator = calibrator
@@ -75,7 +79,6 @@ class ClassificationLitModule(LightningModule):
         # For logging best validation metrics
         self.val_acc_best = MaxMetric()
         self.val_ece_best = MinMetric()
-        self.val_entropy_best = MinMetric()
         self.val_dp_best = MaxMetric() # torch metric dp is ratio is min_pr/max_pr, so close to 1 is good
 
         # Additional metrics for post-hoc calibration
@@ -100,16 +103,101 @@ class ClassificationLitModule(LightningModule):
         x, y, A, A_prop = batch
         y = y.squeeze(-1)
         logits = self.forward(x)
-        task_loss = self.task_criterion(y, logits)
-        reg_loss = self.reg_criterion(x,y,logits)
-        preds = torch.argmax(logits, dim=-1)
+        with torch.no_grad():
+            preds = torch.argmax(logits, dim=-1)
 
-        return task_loss, reg_loss, preds, logits, y, A
+        return x, preds, logits, y, A
+    
+    def adv_loss(self, x,y, logits, train):
+        if train:
+            torch.autograd.set_detect_anomaly(True)
+            optimizer_g, optimizer_d, _ = self.optimizers()
+            # compute exact expectation to replace yhat =E[yhat]= qy * yall
+            num_class = logits.shape[-1]
+            y_all= torch.eye(num_class).float().to(logits.device)
+            y_one_hot = F.one_hot(y, num_classes=num_class).float()
+            q_y = torch.nn.functional.softmax(logits,dim=-1)
+            # same as E_y_hat = torch.matmul(q_y,y_all) with broadcasting
+            E_y_hat = torch.sum(q_y.unsqueeze(-1)*y_all,dim=-1)
+            source = self.net.generator(torch.cat([E_y_hat,x],dim=-1))
+            target = torch.cat([y_one_hot,x],dim=-1)
+
+            # train generator
+            self.toggle_optimizer(optimizer_g)
+
+            # ground truth result (ie: all fake)
+            valid = torch.ones(y.size(0), 1).float().to(logits.device)
+            # compute generator loss E[log(D(G(Z)))]
+            g_loss = self.reg_criterion(self.net.discriminator(source), valid)
+            self.log("train/g_loss", g_loss, on_step=False, on_epoch=True, prog_bar=True)
+            self.manual_backward(g_loss)
+
+            optimizer_g.step()
+            optimizer_g.zero_grad()
+            self.untoggle_optimizer(optimizer_g)
+
+            # train discriminator
+            # Measure discriminator's ability to classify real from generated samples
+            self.toggle_optimizer(optimizer_d)
+
+            # E[log(D(Y))]
+            valid = torch.ones(y.size(0), 1).to(logits.device)
+            real_loss = self.reg_criterion(self.net.discriminator(target), valid)
+
+            # E[1-log(D(G(Z)))]
+            fake = torch.zeros(y.size(0), 1).float().to(logits.device)
+            fake_loss = self.reg_criterion(self.net.discriminator(source.detach()), fake)
+
+            # discriminator loss is the average of these
+            d_loss = (real_loss + fake_loss) / 2
+            self.log("train/d_loss", d_loss, on_step=False, on_epoch=True, prog_bar=True)
+
+            self.manual_backward(d_loss)
+            optimizer_d.step()
+            optimizer_d.zero_grad()
+            self.untoggle_optimizer(optimizer_d)
+            
+        else: # validation
+            valid = torch.ones(y.size(0), 1)
+            valid = valid.float().to(logits.device)
+            q_y = torch.nn.functional.softmax(logits,dim=-1)
+            num_class = logits.shape[-1]
+            # replace y hat with analytic solution
+            y_all= torch.eye(num_class).float().to(logits.device)
+            y_one_hot = F.one_hot(y, num_classes=num_class).float()
+            # same as E_y_hat = torch.matmul(q_y,y_all) with broadcasting
+            E_y_hat = torch.sum(q_y.unsqueeze(-1)*y_all,dim=-1)
+            source = self.net.generator(torch.cat([E_y_hat,x],dim=-1))
+            target = torch.cat([y_one_hot,x],dim=-1)
+            g_loss = self.reg_criterion(self.net.discriminator(source), valid)
+            # compute discriminator loss
+            real_loss = self.reg_criterion(self.net.discriminator(target), valid)
+            fake = torch.zeros(y.size(0), 1)
+            fake = fake.type_as(y).float().to(logits.device)
+
+            fake_loss = self.task_criterion(self.net.discriminator(source.detach()), fake)
+            d_loss = (real_loss + fake_loss)/2
+            
+        return d_loss + g_loss
+
+
 
     def training_step(self, batch: Any, batch_idx: int):
-        task_loss, reg_loss, preds, logits, targets, A = self.step(batch)
+        x, preds, logits, targets, A = self.step(batch)
+        task_loss = self.task_criterion.loss_scalers * self.task_criterion(targets,logits)   
+        
+        if self.is_adv: # loss_value =func(model, data,loss_object, optimizer) always manual backward
+            _,_,optimizer_c = self.optimizers()
+            self.manual_backward(task_loss)
+            optimizer_c.step()
+            optimizer_c.zero_grad()
+            # we are detaching logits and attach it again since we only need value of logits to further take grad on adv
+            reg_loss = self.adv_loss(x,targets,logits.detach().requires_grad_(),True) * self.reg_criterion.loss_scalers
+        else:
+            reg_loss = self.reg_criterion(x,targets,logits) * self.reg_criterion.loss_scalers
+        
         loss = task_loss + reg_loss 
-
+        
         self.log("train/task_loss", task_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/reg_loss", reg_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -147,12 +235,18 @@ class ClassificationLitModule(LightningModule):
 
 
     def validation_step(self, batch: Any, batch_idx: int):
+        x, preds, logits, targets, A =self.step(batch)
+        task_loss = self.task_criterion.loss_scalers * self.task_criterion(targets,logits)
+        if self.is_adv:
+            reg_loss =self.reg_criterion.loss_scalers * self.adv_loss(x,targets,logits.detach(),False) 
+        else:
+            reg_loss = self.reg_criterion.loss_scalers * self.reg_criterion(x,targets,logits)
 
-        task_loss, reg_loss, preds, logits, targets, A  = self.step(batch)
-        loss = task_loss + reg_loss
+        loss = task_loss + reg_loss 
         self.log("val/task_loss", task_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/reg_loss", reg_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+
 
         self.val_outputs["logits"].append(logits)
         self.val_outputs["targets"].append(targets)
@@ -208,11 +302,18 @@ class ClassificationLitModule(LightningModule):
         self.calibrator.train(val_pred, val_y)
 
     def test_step(self, batch: Any, batch_idx: int):
-        task_loss, reg_loss, preds, logits, targets, A = self.step(batch)
-        loss = task_loss + reg_loss
+        x, preds, logits, targets, A =self.step(batch)
+        task_loss = self.task_criterion.loss_scalers * self.task_criterion(targets,logits)
+
+        if self.is_adv:
+            reg_loss =self.reg_criterion.loss_scalers * self.adv_loss(x,targets,logits.detach(),False) 
+        else:
+            reg_loss = self.reg_criterion(x,targets,logits)
+
+        loss = task_loss + reg_loss 
         self.log("test/task_loss", task_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/reg_loss", reg_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("test/total_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
         self.test_outputs["logits"].append(logits)
         self.test_outputs["targets"].append(targets)
@@ -287,6 +388,17 @@ class ClassificationLitModule(LightningModule):
         See examples here:
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        return torch.optim.Adam(
-            params=self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
+        c_optim = torch.optim.Adam(
+            params=self.net.classifier.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
         )
+        if self.is_adv:
+            d_optim = torch.optim.Adam(
+            params=self.net.discriminator.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
+        )
+            g_optim = torch.optim.Adam(
+            params= list(self.net.generator.parameters()) + list(self.net.classifier.parameters()), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
+        )
+            
+      
+            return g_optim, d_optim, c_optim
+        return c_optim

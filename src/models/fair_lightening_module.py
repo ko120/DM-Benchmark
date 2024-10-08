@@ -30,8 +30,8 @@ class fair_ClassificationLitModule(LightningModule):
         self,
         net: torch.nn.Module,
         task_criterion: Callable,
-        reg_criterion:Callable = None, 
-        calibrator: Callable = None,
+        reg_criterion:Callable, 
+        calibrator: Optional[Callable] = None,
         lr: float = 0.001,
         weight_decay: float = 0.0005
         ):
@@ -41,8 +41,12 @@ class fair_ClassificationLitModule(LightningModule):
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False, ignore=['net'])  # this is needed for efficiency
         self.net = net
-        # disable automatic optimization for simulatneous gradient descent
-        self.automatic_optimization = False
+        # check whether adversarial training
+        self.is_adv = self.net.adv
+        # disable automatic optimization for simulatneous gradient descent for adversarial loss
+        if self.is_adv:
+            self.automatic_optimization = False
+            
         # store outputs
         self.train_outputs ={"logits": [],"sensitive": [], "preds": [], "targets":[]}
         self.val_outputs ={"logits": [], "sensitive": [], "preds": [], "targets":[]}
@@ -101,9 +105,11 @@ class fair_ClassificationLitModule(LightningModule):
         # forward pass for classifier
         Z = self.net.encoder(X)
         logit =  self.net.classifier(Z)
-        preds = torch.argmax(logit,dim=-1)
+        with torch.no_grad():
+            preds = torch.argmax(logit,dim=-1)
 
-        return Y, logit, A, preds, Z, A_prop
+        return X, Y, logit, A, preds, Z, A_prop
+    # # This is Gan like implementation, and it takes longer time with same result.
     # def training_step(self, batch: Any, batch_idx: int):
     #     # detect Nan Inf for grad (This is needed since we are taking gradient of L1 Norm)    
     #     torch.autograd.set_detect_anomaly(True)
@@ -128,10 +134,10 @@ class fair_ClassificationLitModule(LightningModule):
     #     # Loss computation
     #     # forward pass for adversarial
     #     # detaching is needed to prevent gradient flow back to classifier
-    #     A_hat = self.net.discriminator(Z.detach()) 
+    #     A_hat = self.net.discriminator(Z.detach().clone()) 
     #     A_hat_prob = torch.sigmoid(A_hat)
     #     A_hat_prob = A_hat_prob.squeeze(-1)
-    #     aud_loss = -self.reg_criterion(A_hat_prob,A)
+    #     aud_loss = -self.reg_criterion(y=A, logits=A_hat_prob)
     #     # multiplying by proportion of group from dataset to compute DP loss = E_z0[h] + E_z1[1-h]
     #     weights = A_prop[0][0]*(1-A) + A_prop[1][1]*(A)
     #     aud_loss = torch.mean(weights* aud_loss)
@@ -156,49 +162,69 @@ class fair_ClassificationLitModule(LightningModule):
     #     # remember to always return loss from `training_step()` or else backpropagation will fail!
     #     return loss
 
+    def adv_loss(self, Y, logits, A, preds, Z, A_prop, task_loss, train):
+        if train:
+            torch.autograd.set_detect_anomaly(True)
+            optimizer, optimizer_d = self.optimizers()
+
+            # taking only gradient on encoder + classifier network    
+            # Loss computation
+            A_hat_prob = self.net.discriminator(Z.detach()) 
+            A_hat_prob = A_hat_prob.squeeze(-1)
+            reg_loss = -self.reg_criterion(y=A,logits=A_hat_prob)
+            # multiplying by proportion of group from dataset to compute DP loss = E_z0[h] + E_z1[1-h]
+            weights = A_prop[0][0]*(1-A) + A_prop[1][1]*(A)
+            reg_loss = torch.mean(weights * reg_loss)
+
+            loss = self.reg_criterion.loss_scalers * reg_loss + task_loss
+
+            self.toggle_optimizer(optimizer) 
+            optimizer.zero_grad()
+            self.manual_backward(loss,retain_graph=True)
+            self.clip_gradients(optimizer, gradient_clip_val=0.5, gradient_clip_algorithm="norm")
+            optimizer.step()
+            
+            # stop tracking gradient for encoder + classifier network 
+            self.untoggle_optimizer(optimizer)
+
+            # taking only gradient on adversarial network 
+            self.toggle_optimizer(optimizer_d) 
+            optimizer_d.zero_grad()
+            self.manual_backward(reg_loss)
+            self.clip_gradients(optimizer_d, gradient_clip_val=0.5, gradient_clip_algorithm="norm")
+            optimizer_d.step()
+            
+            # stop tracking gradient for discriminator network 
+            self.untoggle_optimizer(optimizer_d)
+            return reg_loss, loss
+        else: # validation
+            # computing loss    
+            # forward pass for adversarial
+            A_hat_prob = self.net.discriminator(Z.detach().clone())
+            A_hat_prob = A_hat_prob.squeeze(-1)
+            reg_loss = -self.reg_criterion(y=A,logits=A_hat_prob)
+            weights = A_prop[0][0]*(1-A) + A_prop[1][1]*(A)
+            reg_loss = torch.mean(weights * reg_loss) 
+
+            return reg_loss 
+
+        
+
     # paper implementation: https://github.com/charan223/FairDeepLearning/blob/main/models/model_laftr.py
     def training_step(self, batch: Any, batch_idx: int):
-        # detect Nan Inf for grad (This is needed since we are taking gradient of L1 Norm)    
-        torch.autograd.set_detect_anomaly(True)
-
-        Y, logits, A, preds, Z, A_prop = self.step(batch)
-        optimizer, optimizer_d = self.optimizers()
-        # taking only gradient on encoder + classifier network    
-
-        # Loss computation
-        ce_loss = self.task_criterion(Y,logits)
-        A_hat = self.net.discriminator(Z.detach()) 
-        A_hat_prob = torch.sigmoid(A_hat)
-        A_hat_prob = A_hat_prob.squeeze(-1)
-        aud_loss = -self.reg_criterion(A,A_hat_prob)
-        # multiplying by proportion of group from dataset to compute DP loss = E_z0[h] + E_z1[1-h]
-        weights = A_prop[0][0]*(1-A) + A_prop[1][1]*(A)
-        aud_loss = torch.mean(weights * aud_loss)
-
-        loss = aud_loss + ce_loss
-
-        self.toggle_optimizer(optimizer) 
-        optimizer.zero_grad()
-        self.manual_backward(loss,retain_graph=True)
-        self.clip_gradients(optimizer, gradient_clip_val=0.5, gradient_clip_algorithm="norm")
-        optimizer.step()
-        
-        # stop tracking gradient for encoder + classifier network 
-        self.untoggle_optimizer(optimizer)
-
-        # taking only gradient on adversarial network 
-        self.toggle_optimizer(optimizer_d) 
-        optimizer_d.zero_grad()
-        self.manual_backward(aud_loss)
-        self.clip_gradients(optimizer_d, gradient_clip_val=0.5, gradient_clip_algorithm="norm")
-        optimizer_d.step()
-        
-        # stop tracking gradient for discriminator network 
-        self.untoggle_optimizer(optimizer_d)
-        
+        X, Y, logits, A, preds, Z, A_prop  =self.step(batch)
+        task_loss = self.task_criterion.loss_scalers * self.task_criterion(Y,logits)
+        if self.is_adv:
+            reg_loss, loss = self.adv_loss(Y, logits, A, preds, Z, A_prop, task_loss, True)
+        else:
+            Z0 = Z[A==0]
+            Z1 = Z[A==1]
+            
+            reg_loss = self.reg_criterion.loss_scalers * self.reg_criterion(x= None, y=Z0,logits=Z1)
+            loss = task_loss + reg_loss 
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/ce_loss", ce_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/aud_loss", aud_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/task_loss", task_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/reg_loss", reg_loss, on_step=False, on_epoch=True, prog_bar=True)
         
         self.train_outputs["sensitive"].append(A)
         self.train_outputs["targets"].append(Y)
@@ -232,23 +258,20 @@ class fair_ClassificationLitModule(LightningModule):
         self.train_outputs["sensitive"].clear()
 
     def validation_step(self, batch: Any, batch_idx: int):
-        Y, logits, A, preds, Z, A_prop = self.step(batch)
-       
-        # computing loss    
-        ce_loss = self.task_criterion(Y,logits)
-        # forward pass for adversarial
-        A_hat = self.net.discriminator(Z.detach())
-        A_hat_prob = torch.sigmoid(A_hat)
-        A_hat_prob = A_hat_prob.squeeze(-1)
-        aud_loss = -self.reg_criterion(A,A_hat_prob)
-        weights = A_prop[0][0]*(1-A) + A_prop[1][1]*(A)
-        aud_loss = torch.mean(weights* aud_loss)
-        loss = ce_loss + aud_loss
+        X, Y, logits, A, preds, Z, A_prop  =self.step(batch)
+        task_loss = self.task_criterion.loss_scalers * self.task_criterion(Y,logits)
+        if self.is_adv:
+            reg_loss = self.reg_criterion.loss_scalers * self.adv_loss(Y, logits, A, preds, Z, A_prop, task_loss, False)
+        else:
+            Z0 = Z[A==0]
+            Z1 = Z[A==1]
+            reg_loss = self.reg_criterion.loss_scalers * self.reg_criterion(x= None, y=Z0,logits=Z1)
+        loss = task_loss + reg_loss
 
         # logging
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/ce_loss", ce_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/aud_loss", aud_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/task_loss", task_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/reg_loss", reg_loss, on_step=False, on_epoch=True, prog_bar=True)
 
         self.val_outputs["sensitive"].append(A)
         self.val_outputs["logits"].append(logits)
@@ -305,23 +328,18 @@ class fair_ClassificationLitModule(LightningModule):
         self.calibrator.train(val_pred, val_y)
 
     def test_step(self, batch: Any, batch_idx: int):
-        Y, logits, A, preds, Z, A_prop = self.step(batch)
-
-        # computing loss
-        ce_loss = self.task_criterion(Y,logits)
-        # forward pass for adversarial
-        A_hat = self.net.discriminator(Z.detach())
-        A_hat_prob = torch.sigmoid(A_hat)
-        A_hat_prob = A_hat_prob.squeeze(-1)
-        aud_loss = -self.reg_criterion(A,A_hat_prob)
-        weights = A_prop[0][0]*(1-A) + A_prop[1][1]*(A)
-        aud_loss = torch.mean(weights* aud_loss)
-        loss = ce_loss + aud_loss
-        
+        X, Y, logits, A, preds, Z, A_prop  =self.step(batch)
+        task_loss = self.task_criterion.loss_scalers * self.task_criterion(Y,logits)
+        if self.is_adv:
+            reg_loss = self.reg_criterion.loss_scalers * self.adv_loss(Y, logits, A, preds, Z, A_prop, task_loss, False)
+        else:
+            Z0 = Z[A==0]
+            Z1 = Z[A==1]
+            reg_loss = self.reg_criterion.loss_scalers * self.reg_criterion(x= None, y=Z0,logits=Z1)
+        loss = task_loss + reg_loss
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("test/ce_loss", ce_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("test/aud_loss", aud_loss, on_step=False, on_epoch=True, prog_bar=True)
-        
+        self.log("test/task_loss", task_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/reg_loss", reg_loss, on_step=False, on_epoch=True, prog_bar=True)
 
         self.test_outputs["sensitive"].append(A)
         self.test_outputs["logits"].append(logits)
@@ -398,5 +416,8 @@ class fair_ClassificationLitModule(LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         optim = torch.optim.Adam(params=self.net.predict_params(),lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
-        optim_disc = torch.optim.Adam(params= self.net.audit_params(),lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
-        return [optim, optim_disc], []
+        # if adversarial learning we return optimizer for discriminator
+        if self.is_adv:
+            optim_disc = torch.optim.Adam(params= self.net.audit_params(),lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
+            return optim, optim_disc
+        return optim

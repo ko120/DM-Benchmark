@@ -22,8 +22,8 @@ seed: 12345
 
 datamodule:
   dataset_name: "adult_fair"
-  batch_size: 64
-  test_batch_size: 8
+  batch_size: 128
+  test_batch_size: 16
 
 
 trainer:
@@ -31,12 +31,15 @@ trainer:
   max_epochs: 20
 
 model:
+  net:
+    # Set this true for adversarial learning
+    adv: False
   task_criterion:
     _target_: "src.metrics.train_metrics.ClassificationCELoss"
     loss_scalers: 1
   reg_criterion:
-    _target_: "src.metrics.train_metrics.ClassificationL1Loss"
-    loss_scalers: 0.1
+    _target_: "src.metrics.train_metrics.ClassificationKernelLoss" # sink 10
+    loss_scalers: 10
    
 
 

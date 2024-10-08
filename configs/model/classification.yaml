@@ -3,11 +3,13 @@ lr: 0.001
 weight_decay: 0.0005
 
 net:
-  _target_: src.models.components.models.MLP
-  input_size: 1
-  hwdith: 256
-  hdepth: 2
+  _target_: "src.models.components.models.CalibNet"
+  input_size: 102
   output_size: 1
+  edepth: 2
+  ewidths: 512 # generator 
+  adepth: 2
+  awidths: 256  # discriminator
 
 
 task_criterion:

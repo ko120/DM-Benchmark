@@ -22,13 +22,11 @@ seed: 12345
 
 trainer:
   min_epochs: 10
-  max_epochs: 30
-  gradient_clip_val: 0.5
+  max_epochs: 15
 
 
 
 model:
-  lr: 0.001
   # reg_criterion:
   #   _target_: src.metrics.train_metrics.ClassificationKernelLoss
   #   loss_scalers: 0.2
@@ -52,8 +50,11 @@ model:
   #   bandwidths:
   #     x: 10.0
   #     y: 0.01
+  net: 
+    # Set this true for adversarial learning
+    adv: True
   reg_criterion:
-     _target_: src.metrics.train_metrics.ClassificationSinkhornLoss
+     _target_: src.metrics.train_metrics.ClassificationBCELoss
      loss_scalers: 0.2
   task_criterion:
     _target_: src.metrics.train_metrics.ClassificationCELoss
@@ -63,8 +64,8 @@ model:
 # need to use adult fair dataset to compute DP
 datamodule:
   dataset_name: "adult_fair"
-  batch_size: 64
-  test_batch_size: 8
+  batch_size: 128
+  test_batch_size: 16
   
 logger:
   wandb:
